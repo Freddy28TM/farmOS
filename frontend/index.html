@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FarmOS — Water Risk Assessment</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <main class="container">
+        <header>
+            <h1>FarmOS</h1>
+            <p>Water Risk Assessment</p>
+        </header>
+
+        <section class="card">
+            <h2>Farm Conditions</h2>
+
+            <form id="risk-form">
+
+                <label for="recent-rainfall">
+                    Recent rainfall (mm)
+                </label>
+                <input
+                    id="recent-rainfall"
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    required
+                >
+
+                <label for="forecast-rainfall">
+                    Forecast rainfall (mm)
+                </label>
+                <input
+                    id="forecast-rainfall"
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    required
+                >
+
+                <label for="temperature">
+                    Temperature (°C)
+                </label>
+                <input
+                    id="temperature"
+                    type="number"
+                    step="0.1"
+                    required
+                >
+
+                <button type="submit">
+                    Assess Water Risk
+                </button>
+
+            </form>
+        </section>
+
+        <section id="result" class="card result hidden">
+            <h2>Risk Assessment</h2>
+
+            <p>
+                Risk:
+                <strong id="risk-level"></strong>
+            </p>
+
+            <p>
+                Score:
+                <strong id="score"></strong>
+            </p>
+
+            <p>
+                Confidence:
+                <strong id="confidence"></strong>
+            </p>
+
+            <h3>Risk Factors</h3>
+            <ul id="factors"></ul>
+
+            <h3>Recommendation</h3>
+            <p id="recommendation"></p>
+
+            <h3>Explanation</h3>
+            <p id="explanation"></p>
+        </section>
+
+        <p id="error" class="error hidden"></p>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
