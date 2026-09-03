@@ -23,7 +23,10 @@ class WaterRiskRequest(BaseModel):
     latitude: float = Field(..., ge=-90, le=90)
     longitude: float = Field(..., ge=-180, le=180)
     crop: str = Field(..., pattern="^maize$")
-    growth_stage: str
+    growth_stage: str = Field(
+    ...,
+    pattern="^(germination|vegetative|flowering|maturity)$",
+)
 
 
 @app.get("/")

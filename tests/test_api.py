@@ -114,3 +114,16 @@ def test_water_risk_rejects_unsupported_crop():
     )
 
     assert response.status_code == 422
+
+def test_water_risk_rejects_unsupported_growth_stage():
+    response = client.post(
+        "/water-risk",
+        json={
+            "latitude": -1.286389,
+            "longitude": 36.817223,
+            "crop": "maize",
+            "growth_stage": "unknown",
+        },
+    )
+
+    assert response.status_code == 422
