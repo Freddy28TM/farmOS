@@ -127,3 +127,21 @@ def test_water_risk_rejects_unsupported_growth_stage():
     )
 
     assert response.status_code == 422
+
+def test_water_risk_invalid_crop_error_identifies_field():
+    response = client.post(
+        "/water-risk",
+        json={
+            "latitude": -1.286389,
+            "longitude": 36.817223,
+            "crop": "banana",
+            "growth_stage": "vegetative",
+        },
+    )
+
+    assert response.status_code == 422
+
+    error = response.json()
+
+    assert error["detail"][0]["loc"][-1] == "crop"
+    assert "Crop must be maize" in error["detail"][0]["msg"]

@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from backend.app.decision_engine import assess_water_risk
 from backend.app.environmental_data import get_environmental_data
@@ -22,11 +22,18 @@ app.add_middleware(
 class WaterRiskRequest(BaseModel):
     latitude: float = Field(..., ge=-90, le=90)
     longitude: float = Field(..., ge=-180, le=180)
-    crop: str = Field(..., pattern="^maize$")
+    crop: str
     growth_stage: str = Field(
-    ...,
-    pattern="^(germination|vegetative|flowering|maturity)$",
-)
+        ...,
+        pattern="^(germination|vegetative|flowering|maturity)$",
+    )
+
+    @field_validator("crop")
+    @classmethod
+    def validate_crop(cls, value):
+        if value != "maize":
+            raise ValueError("Crop must be maize")
+        return value
 
 
 @app.get("/")
