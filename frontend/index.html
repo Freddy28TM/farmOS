@@ -15,7 +15,7 @@
         </header>
 
         <section class="card">
-            <h2>Farm Location</h2>
+            <h2>Farm Information</h2>
 
             <form id="risk-form">
 
@@ -47,6 +47,27 @@
                     required
                 >
 
+                <label for="crop">
+                    Crop
+                </label>
+
+                <select id="crop" required>
+                    <option value="">Select crop</option>
+                    <option value="maize">Maize</option>
+                </select>
+
+                <label for="growth-stage">
+                    Growth Stage
+                </label>
+
+                <select id="growth-stage" required>
+                    <option value="">Select growth stage</option>
+                    <option value="germination">Germination</option>
+                    <option value="vegetative">Vegetative</option>
+                    <option value="flowering">Flowering</option>
+                    <option value="maturity">Maturity</option>
+                </select>
+
                 <button type="submit">
                     Assess Water Risk
                 </button>
@@ -70,6 +91,11 @@
             <p>
                 Confidence:
                 <strong id="confidence"></strong>
+            </p>
+
+            <p>
+                Farm Context:
+                <strong id="context"></strong>
             </p>
 
             <h3>Risk Factors</h3>

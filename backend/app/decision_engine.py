@@ -2,6 +2,8 @@ def assess_water_risk(
     recent_rainfall,
     forecast_rainfall,
     temperature,
+    crop,
+    growth_stage,
 ):
     """
     Assess water-related agricultural risk.
@@ -11,6 +13,7 @@ def assess_water_risk(
 
     score = 0
     factors = []
+    context = f"Crop: {crop}, Growth stage: {growth_stage}"
 
     if recent_rainfall < 5:
         score += 2
@@ -72,4 +75,5 @@ def assess_water_risk(
         "factors": factors,
         "recommendation": recommendation,
         "explanation": explanation,
+        "context": context,
     }

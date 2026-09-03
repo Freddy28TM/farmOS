@@ -22,6 +22,8 @@ app.add_middleware(
 class WaterRiskRequest(BaseModel):
     latitude: float
     longitude: float
+    crop: str
+    growth_stage: str
 
 
 @app.get("/")
@@ -40,4 +42,6 @@ def water_risk(request: WaterRiskRequest):
         recent_rainfall=environmental_data["recent_rainfall"],
         forecast_rainfall=environmental_data["forecast_rainfall"],
         temperature=environmental_data["temperature"],
+        crop=request.crop,
+        growth_stage=request.growth_stage,
     )

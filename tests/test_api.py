@@ -33,6 +33,8 @@ def test_water_risk_high(monkeypatch):
         json={
             "latitude": -1.286389,
             "longitude": 36.817223,
+            "crop": "maize",
+             "growth_stage": "vegetative",
         },
     )
 
@@ -62,6 +64,8 @@ def test_water_risk_low(monkeypatch):
         json={
             "latitude": -1.286389,
             "longitude": 36.817223,
+            "crop": "maize",
+            "growth_stage": "vegetative",
         },
     )
 

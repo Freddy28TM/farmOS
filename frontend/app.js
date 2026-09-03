@@ -6,6 +6,7 @@ const error = document.getElementById("error");
 const riskLevel = document.getElementById("risk-level");
 const score = document.getElementById("score");
 const confidence = document.getElementById("confidence");
+const context = document.getElementById("context");
 const factors = document.getElementById("factors");
 const recommendation = document.getElementById("recommendation");
 const explanation = document.getElementById("explanation");
@@ -24,6 +25,10 @@ form.addEventListener("submit", async (event) => {
         document.getElementById("longitude").value
     );
 
+    const crop = document.getElementById("crop").value;
+
+    const growthStage = document.getElementById("growth-stage").value;
+
     try {
         const response = await fetch(
             "http://127.0.0.1:8000/water-risk",
@@ -34,7 +39,9 @@ form.addEventListener("submit", async (event) => {
                 },
                 body: JSON.stringify({
                     latitude: latitude,
-                    longitude: longitude
+                    longitude: longitude,
+                    crop: crop,
+                    growth_stage: growthStage
                 })
             }
         );
@@ -48,6 +55,7 @@ form.addEventListener("submit", async (event) => {
         riskLevel.textContent = data.risk_level;
         score.textContent = data.score;
         confidence.textContent = data.confidence;
+        context.textContent = data.context;
 
         factors.innerHTML = "";
 
