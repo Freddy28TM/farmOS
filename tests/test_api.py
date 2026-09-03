@@ -15,13 +15,24 @@ def test_root():
     }
 
 
-def test_water_risk_high():
+def test_water_risk_high(monkeypatch):
+    def fake_environmental_data(latitude, longitude):
+        return {
+            "temperature": 35,
+            "recent_rainfall": 2,
+            "forecast_rainfall": 2,
+        }
+
+    monkeypatch.setattr(
+        "backend.app.main.get_environmental_data",
+        fake_environmental_data,
+    )
+
     response = client.post(
         "/water-risk",
         json={
-            "recent_rainfall": 2,
-            "forecast_rainfall": 2,
-            "temperature": 35,
+            "latitude": -1.286389,
+            "longitude": 36.817223,
         },
     )
 
@@ -33,13 +44,24 @@ def test_water_risk_high():
     assert data["score"] == 6
 
 
-def test_water_risk_low():
+def test_water_risk_low(monkeypatch):
+    def fake_environmental_data(latitude, longitude):
+        return {
+            "temperature": 24,
+            "recent_rainfall": 30,
+            "forecast_rainfall": 30,
+        }
+
+    monkeypatch.setattr(
+        "backend.app.main.get_environmental_data",
+        fake_environmental_data,
+    )
+
     response = client.post(
         "/water-risk",
         json={
-            "recent_rainfall": 30,
-            "forecast_rainfall": 30,
-            "temperature": 24,
+            "latitude": -1.286389,
+            "longitude": 36.817223,
         },
     )
 

@@ -16,16 +16,12 @@ form.addEventListener("submit", async (event) => {
     result.classList.add("hidden");
     error.classList.add("hidden");
 
-    const recentRainfall = Number(
-        document.getElementById("recent-rainfall").value
+    const latitude = Number(
+        document.getElementById("latitude").value
     );
 
-    const forecastRainfall = Number(
-        document.getElementById("forecast-rainfall").value
-    );
-
-    const temperature = Number(
-        document.getElementById("temperature").value
+    const longitude = Number(
+        document.getElementById("longitude").value
     );
 
     try {
@@ -37,9 +33,8 @@ form.addEventListener("submit", async (event) => {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    recent_rainfall: recentRainfall,
-                    forecast_rainfall: forecastRainfall,
-                    temperature: temperature
+                    latitude: latitude,
+                    longitude: longitude
                 })
             }
         );
