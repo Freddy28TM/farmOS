@@ -31,13 +31,31 @@ def get_environmental_data(latitude, longitude):
     with urlopen(url, timeout=10) as response:
         data = json.load(response)
 
-    precipitation = data["hourly"]["precipitation"]
+    try:
+        temperature = data["current"]["temperature_2m"]
+    except (KeyError, TypeError):
+        raise ValueError(
+            "Environmental data is missing temperature"
+        )
+
+    try:
+        precipitation = data["hourly"]["precipitation"]
+    except (KeyError, TypeError):
+        raise ValueError(
+            "Environmental data is missing precipitation"
+        )
+
+    if len(precipitation) < 48:
+        raise ValueError(
+            "Environmental data requires at least 48 "
+            "precipitation values"
+        )
 
     recent_rainfall = sum(precipitation[:24])
     forecast_rainfall = sum(precipitation[24:48])
 
     return {
-        "temperature": data["current"]["temperature_2m"],
+        "temperature": temperature,
         "recent_rainfall": recent_rainfall,
         "forecast_rainfall": forecast_rainfall,
     }
