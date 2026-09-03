@@ -145,3 +145,40 @@ def test_water_risk_invalid_crop_error_identifies_field():
 
     assert error["detail"][0]["loc"][-1] == "crop"
     assert "Crop must be maize" in error["detail"][0]["msg"]
+
+def test_water_risk_response_has_expected_fields(monkeypatch):
+    def fake_environmental_data(latitude, longitude):
+        return {
+            "temperature": 24,
+            "recent_rainfall": 30,
+            "forecast_rainfall": 30,
+        }
+
+    monkeypatch.setattr(
+        "backend.app.main.get_environmental_data",
+        fake_environmental_data,
+    )
+
+    response = client.post(
+        "/water-risk",
+        json={
+            "latitude": -1.286389,
+            "longitude": 36.817223,
+            "crop": "maize",
+            "growth_stage": "vegetative",
+        },
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert set(data.keys()) == {
+        "risk_level",
+        "score",
+        "confidence",
+        "factors",
+        "recommendation",
+        "explanation",
+        "context",
+    }

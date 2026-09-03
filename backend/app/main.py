@@ -36,12 +36,22 @@ class WaterRiskRequest(BaseModel):
         return value
 
 
+class WaterRiskResponse(BaseModel):
+    risk_level: str
+    score: int
+    confidence: str
+    factors: list[str]
+    recommendation: str
+    explanation: str
+    context: str
+
+
 @app.get("/")
 def root():
     return {"message": "FarmOS API is running"}
 
 
-@app.post("/water-risk")
+@app.post("/water-risk", response_model=WaterRiskResponse)
 def water_risk(request: WaterRiskRequest):
     environmental_data = get_environmental_data(
         latitude=request.latitude,
