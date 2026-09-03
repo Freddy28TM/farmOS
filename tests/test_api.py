@@ -75,3 +75,29 @@ def test_water_risk_low(monkeypatch):
 
     assert data["risk_level"] == "LOW"
     assert data["score"] == 0
+
+def test_water_risk_rejects_invalid_latitude():
+    response = client.post(
+        "/water-risk",
+        json={
+            "latitude": 100,
+            "longitude": 36.817223,
+            "crop": "maize",
+            "growth_stage": "vegetative",
+        },
+    )
+
+    assert response.status_code == 422
+
+def test_water_risk_rejects_invalid_longitude():
+    response = client.post(
+        "/water-risk",
+        json={
+            "latitude": -1.286389,
+            "longitude": 200,
+            "crop": "maize",
+            "growth_stage": "vegetative",
+        },
+    )
+
+    assert response.status_code == 422

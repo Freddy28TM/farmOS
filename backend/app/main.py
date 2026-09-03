@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from backend.app.decision_engine import assess_water_risk
 from backend.app.environmental_data import get_environmental_data
@@ -20,8 +20,8 @@ app.add_middleware(
 
 
 class WaterRiskRequest(BaseModel):
-    latitude: float
-    longitude: float
+    latitude: float = Field(..., ge=-90, le=90)
+    longitude: float = Field(..., ge=-180, le=180)
     crop: str
     growth_stage: str
 
