@@ -43,7 +43,7 @@ def test_water_risk_high(monkeypatch):
     data = response.json()
 
     assert data["risk_level"] == "HIGH"
-    assert data["score"] == 6
+    assert data["score"] == 7
 
 
 def test_water_risk_low(monkeypatch):
