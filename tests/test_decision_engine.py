@@ -72,3 +72,52 @@ def test_good_conditions_do_not_add_stage_bonus():
     assert result["score"] == 0
     assert result["risk_level"] == "LOW"
     assert "Maize is in the vegetative stage" not in result["factors"]
+
+def test_flowering_maize_gets_context_aware_recommendation():
+    result = assess_water_risk(
+        recent_rainfall=2,
+        forecast_rainfall=30,
+        temperature=24,
+        crop="maize",
+        growth_stage="flowering",
+    )
+
+    assert result["risk_level"] == "HIGH"
+    assert "flowering" in result["recommendation"].lower()
+
+def test_vegetative_maize_gets_context_aware_recommendation():
+    result = assess_water_risk(
+        recent_rainfall=2,
+        forecast_rainfall=30,
+        temperature=24,
+        crop="maize",
+        growth_stage="vegetative",
+    )
+
+    assert result["risk_level"] == "MEDIUM"
+    assert "soil moisture" in result["recommendation"].lower()
+
+def test_high_temperature_is_reflected_in_recommendation():
+    result = assess_water_risk(
+        recent_rainfall=30,
+        forecast_rainfall=30,
+        temperature=36,
+        crop="maize",
+        growth_stage="vegetative",
+    )
+
+    assert result["risk_level"] == "MEDIUM"
+    assert "temperature" in result["recommendation"].lower()
+
+def test_low_risk_gets_general_monitoring_recommendation():
+    result = assess_water_risk(
+        recent_rainfall=30,
+        forecast_rainfall=30,
+        temperature=24,
+        crop="maize",
+        growth_stage="vegetative",
+    )
+
+    assert result["risk_level"] == "LOW"
+    assert result["score"] == 0
+    assert "continue monitoring" in result["recommendation"].lower()

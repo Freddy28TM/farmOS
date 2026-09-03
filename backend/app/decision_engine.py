@@ -74,17 +74,29 @@ def assess_water_risk(
 
     # Generate recommendation
     if risk_level == "HIGH":
-        recommendation = (
-            "Monitor soil moisture and consider appropriate "
-            "water-conservation measures."
-        )
+        if crop.lower() == "maize" and growth_stage.lower() == "flowering":
+            recommendation = (
+                "Monitor soil moisture closely and prioritize "
+                "appropriate water-conservation measures during "
+                "flowering."
+            )
+        else:
+            recommendation = (
+                "Monitor soil moisture and consider appropriate "
+                "water-conservation measures."
+            )
 
     elif risk_level == "MEDIUM":
-        recommendation = (
-            "Monitor soil moisture and weather conditions "
-            "closely."
-        )
-
+        if temperature >= 35:
+            recommendation = (
+                "Monitor soil moisture and temperature "
+                "conditions closely."
+            )
+        else:
+            recommendation = (
+                "Monitor soil moisture and weather conditions "
+                "closely."
+            )
     else:
         recommendation = (
             "Continue monitoring weather and farm conditions."
