@@ -34,7 +34,7 @@ def test_water_risk_high(monkeypatch):
             "latitude": -1.286389,
             "longitude": 36.817223,
             "crop": "maize",
-             "growth_stage": "vegetative",
+            "growth_stage": "vegetative",
         },
     )
 
@@ -76,6 +76,7 @@ def test_water_risk_low(monkeypatch):
     assert data["risk_level"] == "LOW"
     assert data["score"] == 0
 
+
 def test_water_risk_rejects_invalid_latitude():
     response = client.post(
         "/water-risk",
@@ -88,6 +89,7 @@ def test_water_risk_rejects_invalid_latitude():
     )
 
     assert response.status_code == 422
+
 
 def test_water_risk_rejects_invalid_longitude():
     response = client.post(
@@ -102,6 +104,7 @@ def test_water_risk_rejects_invalid_longitude():
 
     assert response.status_code == 422
 
+
 def test_water_risk_rejects_unsupported_crop():
     response = client.post(
         "/water-risk",
@@ -115,6 +118,7 @@ def test_water_risk_rejects_unsupported_crop():
 
     assert response.status_code == 422
 
+
 def test_water_risk_rejects_unsupported_growth_stage():
     response = client.post(
         "/water-risk",
@@ -127,6 +131,7 @@ def test_water_risk_rejects_unsupported_growth_stage():
     )
 
     assert response.status_code == 422
+
 
 def test_water_risk_invalid_crop_error_identifies_field():
     response = client.post(
@@ -145,6 +150,7 @@ def test_water_risk_invalid_crop_error_identifies_field():
 
     assert error["detail"][0]["loc"][-1] == "crop"
     assert "Crop must be maize" in error["detail"][0]["msg"]
+
 
 def test_water_risk_response_has_expected_fields(monkeypatch):
     def fake_environmental_data(latitude, longitude):
@@ -182,6 +188,7 @@ def test_water_risk_response_has_expected_fields(monkeypatch):
         "explanation",
         "context",
     }
+
 
 def test_water_risk_handles_environmental_data_failure(monkeypatch):
     def fake_environmental_data(latitude, longitude):
@@ -262,40 +269,6 @@ def test_water_risk_rejects_missing_crop():
     error = response.json()
 
     assert error["detail"][0]["loc"][-1] == "crop"
-
-
-def test_water_risk_rejects_missing_growth_stage():
-    response = client.post(
-        "/water-risk",
-        json={
-            "latitude": -1.286389,
-            "longitude": 36.817223,
-            "crop": "maize",
-        },
-    )
-
-    assert response.status_code == 422
-
-    error = response.json()
-
-    assert error["detail"][0]["loc"][-1] == "growth_stage"
-
-
-def test_water_risk_rejects_missing_growth_stage():
-    response = client.post(
-        "/water-risk",
-        json={
-            "latitude": -1.286389,
-            "longitude": 36.817223,
-            "crop": "maize",
-        },
-    )
-
-    assert response.status_code == 422
-
-    error = response.json()
-
-    assert error["detail"][0]["loc"][-1] == "growth_stage"
 
 
 def test_water_risk_rejects_missing_growth_stage():
