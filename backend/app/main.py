@@ -5,9 +5,14 @@ from pydantic import BaseModel, Field, field_validator
 
 from backend.app.decision_engine import assess_water_risk
 from backend.app.environmental_data import get_environmental_data
+from backend.app.database import Base, engine
+from backend.app import models
 
 
 app = FastAPI(title="FarmOS API")
+
+
+Base.metadata.create_all(bind=engine)
 
 
 app.add_middleware(
