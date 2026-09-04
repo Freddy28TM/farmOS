@@ -316,3 +316,58 @@ def test_water_risk_handles_environmental_network_failure(monkeypatch):
     assert error["detail"] == (
         "Environmental data request failed"
     )
+
+
+def test_water_risk_end_to_end_flow(monkeypatch):
+    def fake_environmental_data(latitude, longitude):
+        assert latitude == -1.286389
+        assert longitude == 36.817223
+
+        return {
+            "temperature": 35,
+            "recent_rainfall": 2,
+            "forecast_rainfall": 30,
+        }
+
+    monkeypatch.setattr(
+        "backend.app.main.get_environmental_data",
+        fake_environmental_data,
+    )
+
+    response = client.post(
+        "/water-risk",
+        json={
+            "latitude": -1.286389,
+            "longitude": 36.817223,
+            "crop": "maize",
+            "growth_stage": "flowering",
+        },
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["risk_level"] == "HIGH"
+    assert data["score"] == 6
+    assert data["confidence"] == "MEDIUM"
+
+    assert "Low recent rainfall" in data["factors"]
+    assert "High temperature" in data["factors"]
+    assert (
+        "Maize is in a water-sensitive flowering stage"
+        in data["factors"]
+    )
+
+    assert (
+        data["recommendation"]
+        == (
+            "Monitor soil moisture closely and prioritize "
+            "appropriate water-conservation measures during "
+            "flowering."
+        )
+    )
+
+    assert data["context"] == (
+        "Crop: maize, Growth stage: flowering"
+    )
