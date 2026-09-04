@@ -121,3 +121,21 @@ def test_low_risk_gets_general_monitoring_recommendation():
     assert result["risk_level"] == "LOW"
     assert result["score"] == 0
     assert "continue monitoring" in result["recommendation"].lower()
+    
+def test_multiple_risk_factors_are_explained():
+    result = assess_water_risk(
+        recent_rainfall=2,
+        forecast_rainfall=2,
+        temperature=36,
+        crop="maize",
+        growth_stage="vegetative",
+    )
+
+    assert result["risk_level"] == "HIGH"
+    assert result["score"] == 7
+
+    explanation = result["explanation"].lower()
+
+    assert "low recent rainfall" in explanation
+    assert "limited forecast rainfall" in explanation
+    assert "high temperature" in explanation
