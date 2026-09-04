@@ -182,3 +182,32 @@ def test_water_risk_response_has_expected_fields(monkeypatch):
         "explanation",
         "context",
     }
+
+def test_water_risk_handles_environmental_data_failure(monkeypatch):
+    def fake_environmental_data(latitude, longitude):
+        raise ValueError(
+            "Environmental data is missing temperature"
+        )
+
+    monkeypatch.setattr(
+        "backend.app.main.get_environmental_data",
+        fake_environmental_data,
+    )
+
+    response = client.post(
+        "/water-risk",
+        json={
+            "latitude": -1.286389,
+            "longitude": 36.817223,
+            "crop": "maize",
+            "growth_stage": "vegetative",
+        },
+    )
+
+    assert response.status_code == 503
+
+    error = response.json()
+
+    assert error["detail"] == (
+        "Environmental data is missing temperature"
+    )

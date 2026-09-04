@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from pydantic import BaseModel, Field, field_validator
@@ -53,10 +53,16 @@ def root():
 
 @app.post("/water-risk", response_model=WaterRiskResponse)
 def water_risk(request: WaterRiskRequest):
-    environmental_data = get_environmental_data(
-        latitude=request.latitude,
-        longitude=request.longitude,
-    )
+    try:
+        environmental_data = get_environmental_data(
+            latitude=request.latitude,
+            longitude=request.longitude,
+        )
+    except ValueError as error:
+        raise HTTPException(
+            status_code=503,
+            detail=str(error),
+        )
 
     return assess_water_risk(
         recent_rainfall=environmental_data["recent_rainfall"],
