@@ -313,3 +313,33 @@ def test_water_risk_rejects_missing_growth_stage():
     error = response.json()
 
     assert error["detail"][0]["loc"][-1] == "growth_stage"
+
+
+def test_water_risk_handles_environmental_network_failure(monkeypatch):
+    def failing_environmental_data(latitude, longitude):
+        raise ValueError(
+            "Environmental data request failed"
+        )
+
+    monkeypatch.setattr(
+        "backend.app.main.get_environmental_data",
+        failing_environmental_data,
+    )
+
+    response = client.post(
+        "/water-risk",
+        json={
+            "latitude": -1.286389,
+            "longitude": 36.817223,
+            "crop": "maize",
+            "growth_stage": "vegetative",
+        },
+    )
+
+    assert response.status_code == 503
+
+    error = response.json()
+
+    assert error["detail"] == (
+        "Environmental data request failed"
+    )

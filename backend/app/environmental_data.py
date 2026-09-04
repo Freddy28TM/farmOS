@@ -28,8 +28,13 @@ def get_environmental_data(latitude, longitude):
 
     url = "https://" + "api.open-meteo.com" + "/v1/forecast?" + params
 
-    with urlopen(url, timeout=10) as response:
-        data = json.load(response)
+    try:
+        with urlopen(url, timeout=10) as response:
+            data = json.load(response)
+    except (TimeoutError, OSError) as error:
+        raise ValueError(
+            "Environmental data request failed"
+        ) from error
 
     try:
         temperature = data["current"]["temperature_2m"]

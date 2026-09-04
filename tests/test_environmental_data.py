@@ -146,3 +146,25 @@ def test_environmental_data_rejects_insufficient_precipitation(
         raise AssertionError(
             "Expected ValueError for insufficient precipitation data"
         )
+
+
+def test_environmental_data_handles_network_failure(monkeypatch):
+    def failing_urlopen(url, timeout):
+        raise TimeoutError("Environmental data request timed out")
+
+    monkeypatch.setattr(
+        "backend.app.environmental_data.urlopen",
+        failing_urlopen,
+    )
+
+    try:
+        get_environmental_data(
+            latitude=-1.286389,
+            longitude=36.817223,
+        )
+    except ValueError as error:
+        assert "request failed" in str(error).lower()
+    else:
+        raise AssertionError(
+            "Expected ValueError for environmental data network failure"
+        )
