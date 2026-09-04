@@ -167,3 +167,97 @@ def test_temperature_at_boundary_triggers_temperature_risk():
     assert result["score"] == 3
     assert result["risk_level"] == "MEDIUM"
     assert "High temperature" in result["factors"]
+
+
+def test_score_boundary_two_is_medium_risk():
+    result = assess_water_risk(
+        recent_rainfall=2,
+        forecast_rainfall=30,
+        temperature=24,
+        crop="maize",
+        growth_stage="maturity",
+    )
+
+    assert result["score"] == 2
+    assert result["risk_level"] == "MEDIUM"
+    assert result["confidence"] == "MEDIUM"
+
+
+def test_score_boundary_four_is_high_risk():
+    result = assess_water_risk(
+        recent_rainfall=2,
+        forecast_rainfall=30,
+        temperature=24,
+        crop="maize",
+        growth_stage="flowering",
+    )
+
+    assert result["score"] == 4
+    assert result["risk_level"] == "HIGH"
+    assert result["confidence"] == "MEDIUM"
+
+
+def test_maturity_maize_gets_no_stage_bonus_under_water_stress():
+    result = assess_water_risk(
+        recent_rainfall=2,
+        forecast_rainfall=30,
+        temperature=24,
+        crop="maize",
+        growth_stage="maturity",
+    )
+
+    assert result["score"] == 2
+    assert result["risk_level"] == "MEDIUM"
+    assert "Maize is in the maturity stage" not in result["factors"]
+
+
+def test_germination_maize_gets_stage_adjustment_under_water_stress():
+    result = assess_water_risk(
+        recent_rainfall=2,
+        forecast_rainfall=30,
+        temperature=24,
+        crop="maize",
+        growth_stage="germination",
+    )
+
+    assert result["score"] == 3
+    assert result["risk_level"] == "MEDIUM"
+    assert "Maize is in the germination stage" in result["factors"]
+
+
+def test_no_risk_conditions_produce_no_risk_explanation():
+    result = assess_water_risk(
+        recent_rainfall=30,
+        forecast_rainfall=30,
+        temperature=24,
+        crop="maize",
+        growth_stage="maturity",
+    )
+
+    assert result["score"] == 0
+    assert result["risk_level"] == "LOW"
+    assert result["factors"] == []
+    assert (
+        result["explanation"]
+        == "Available conditions do not currently indicate "
+        "significant water-stress risk."
+    )
+
+
+def test_multiple_environmental_risks_do_not_add_maturity_stage_bonus():
+    result = assess_water_risk(
+        recent_rainfall=2,
+        forecast_rainfall=2,
+        temperature=36,
+        crop="maize",
+        growth_stage="maturity",
+    )
+
+    assert result["score"] == 6
+    assert result["risk_level"] == "HIGH"
+    assert result["confidence"] == "MEDIUM"
+    assert len(result["factors"]) == 3
+    assert "Low recent rainfall" in result["factors"]
+    assert "Limited forecast rainfall" in result["factors"]
+    assert "High temperature" in result["factors"]
+    assert "Maize is in the maturity stage" not in result["factors"]
