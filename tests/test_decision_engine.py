@@ -139,3 +139,31 @@ def test_multiple_risk_factors_are_explained():
     assert "low recent rainfall" in explanation
     assert "limited forecast rainfall" in explanation
     assert "high temperature" in explanation
+
+def test_rainfall_at_boundary_does_not_trigger_rainfall_risk():
+    result = assess_water_risk(
+        recent_rainfall=5,
+        forecast_rainfall=5,
+        temperature=24,
+        crop="maize",
+        growth_stage="vegetative",
+    )
+
+    assert result["score"] == 0
+    assert result["risk_level"] == "LOW"
+    assert "Low recent rainfall" not in result["factors"]
+    assert "Limited forecast rainfall" not in result["factors"]
+
+
+def test_temperature_at_boundary_triggers_temperature_risk():
+    result = assess_water_risk(
+        recent_rainfall=30,
+        forecast_rainfall=30,
+        temperature=35,
+        crop="maize",
+        growth_stage="vegetative",
+    )
+
+    assert result["score"] == 3
+    assert result["risk_level"] == "MEDIUM"
+    assert "High temperature" in result["factors"]
