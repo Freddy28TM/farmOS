@@ -10,7 +10,11 @@ from sqlalchemy.orm import Session
 from backend.app.decision_engine import assess_water_risk
 from backend.app.environmental_data import get_environmental_data
 from backend.app.database import Base, engine, get_db
-from backend.app.security import hash_password
+from backend.app.security import (
+    create_access_token,
+    hash_password,
+    verify_password,
+)
 from backend.app import models
 
 
@@ -58,6 +62,37 @@ class RegistrationRequest(BaseModel):
 class RegistrationResponse(BaseModel):
     id: int
     email: str
+
+
+class LoginRequest(BaseModel):
+    email: str = Field(..., min_length=3, max_length=255)
+    password: str = Field(..., min_length=1, max_length=128)
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, value):
+        value = value.strip().lower()
+
+        if "@" not in value or value.startswith("@") or value.endswith("@"):
+            raise ValueError("Invalid email address")
+
+        if value.count("@") != 1:
+            raise ValueError("Invalid email address")
+
+        local_part, domain = value.split("@")
+
+        if not local_part or "." not in domain:
+            raise ValueError("Invalid email address")
+
+        if domain.startswith(".") or domain.endswith("."):
+            raise ValueError("Invalid email address")
+
+        return value
+
+
+class LoginResponse(BaseModel):
+    access_token: str
+    token_type: str
 
 
 class WaterRiskRequest(BaseModel):
@@ -133,6 +168,34 @@ def register(
     return {
         "id": user.id,
         "email": user.email,
+    }
+
+
+@app.post("/login", response_model=LoginResponse)
+def login(
+    request: LoginRequest,
+    db: Session = Depends(get_db),
+):
+    user = db.scalar(
+        select(models.User).where(
+            models.User.email == request.email
+        )
+    )
+
+    if user is None or not verify_password(
+        request.password,
+        user.password_hash,
+    ):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid credentials",
+        )
+
+    access_token = create_access_token(user.id)
+
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
     }
 
 
