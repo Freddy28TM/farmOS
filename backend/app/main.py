@@ -284,6 +284,28 @@ def get_me(
     }
 
 
+@app.post("/farms", response_model=FarmResponse, status_code=201)
+def create_farm(
+    request: FarmCreateRequest,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    farm = models.Farm(
+        user_id=current_user.id,
+        name=request.name,
+        latitude=request.latitude,
+        longitude=request.longitude,
+        crop=request.crop,
+        growth_stage=request.growth_stage,
+    )
+
+    db.add(farm)
+    db.commit()
+    db.refresh(farm)
+
+    return farm
+
+
 @app.post("/water-risk", response_model=WaterRiskResponse)
 def water_risk(request: WaterRiskRequest):
     try:
