@@ -1,11 +1,16 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from pydantic import BaseModel, Field, field_validator
 
+from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
+
 from backend.app.decision_engine import assess_water_risk
 from backend.app.environmental_data import get_environmental_data
-from backend.app.database import Base, engine
+from backend.app.database import Base, engine, get_db
+from backend.app.security import hash_password
 from backend.app import models
 
 
@@ -22,6 +27,37 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+class RegistrationRequest(BaseModel):
+    email: str = Field(..., min_length=3, max_length=255)
+    password: str = Field(..., min_length=8, max_length=128)
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, value):
+        value = value.strip().lower()
+
+        if "@" not in value or value.startswith("@") or value.endswith("@"):
+            raise ValueError("Invalid email address")
+
+        if value.count("@") != 1:
+            raise ValueError("Invalid email address")
+
+        local_part, domain = value.split("@")
+
+        if not local_part or "." not in domain:
+            raise ValueError("Invalid email address")
+
+        if domain.startswith(".") or domain.endswith("."):
+            raise ValueError("Invalid email address")
+
+        return value
+
+
+class RegistrationResponse(BaseModel):
+    id: int
+    email: str
 
 
 class WaterRiskRequest(BaseModel):
@@ -54,6 +90,50 @@ class WaterRiskResponse(BaseModel):
 @app.get("/")
 def root():
     return {"message": "FarmOS API is running"}
+
+
+@app.post(
+    "/register",
+    response_model=RegistrationResponse,
+    status_code=201,
+)
+def register(
+    request: RegistrationRequest,
+    db: Session = Depends(get_db),
+):
+    existing_user = db.scalar(
+        select(models.User).where(
+            models.User.email == request.email
+        )
+    )
+
+    if existing_user is not None:
+        raise HTTPException(
+            status_code=409,
+            detail="Email is already registered",
+        )
+
+    user = models.User(
+        email=request.email,
+        password_hash=hash_password(request.password),
+    )
+
+    db.add(user)
+
+    try:
+        db.commit()
+        db.refresh(user)
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=409,
+            detail="Email is already registered",
+        )
+
+    return {
+        "id": user.id,
+        "email": user.email,
+    }
 
 
 @app.post("/water-risk", response_model=WaterRiskResponse)
