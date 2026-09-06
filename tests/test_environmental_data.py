@@ -168,3 +168,195 @@ def test_environmental_data_handles_network_failure(monkeypatch):
         raise AssertionError(
             "Expected ValueError for environmental data network failure"
         )
+
+
+def test_environmental_data_rejects_invalid_latitude():
+    try:
+        get_environmental_data(
+            latitude=91,
+            longitude=36.817223,
+        )
+    except ValueError as error:
+        assert "latitude" in str(error).lower()
+    else:
+        raise AssertionError(
+            "Expected ValueError for invalid latitude"
+        )
+
+
+def test_environmental_data_rejects_invalid_longitude():
+    try:
+        get_environmental_data(
+            latitude=-1.286389,
+            longitude=181,
+        )
+    except ValueError as error:
+        assert "longitude" in str(error).lower()
+    else:
+        raise AssertionError(
+            "Expected ValueError for invalid longitude"
+        )
+
+
+def test_environmental_data_rejects_non_numeric_temperature(
+    monkeypatch,
+):
+    class InvalidResponse:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc_value, traceback):
+            pass
+
+        def read(self):
+            data = {
+                "current": {
+                    "temperature_2m": "24",
+                },
+                "hourly": {
+                    "precipitation": [1] * 48,
+                },
+            }
+
+            return json.dumps(data).encode()
+
+    monkeypatch.setattr(
+        "backend.app.environmental_data.urlopen",
+        lambda url, timeout: InvalidResponse(),
+    )
+
+    try:
+        get_environmental_data(
+            latitude=-1.286389,
+            longitude=36.817223,
+        )
+    except ValueError as error:
+        assert "temperature" in str(error).lower()
+        assert "numeric" in str(error).lower()
+    else:
+        raise AssertionError(
+            "Expected ValueError for non-numeric temperature"
+        )
+
+
+def test_environmental_data_rejects_non_numeric_precipitation(
+    monkeypatch,
+):
+    class InvalidResponse:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc_value, traceback):
+            pass
+
+        def read(self):
+            data = {
+                "current": {
+                    "temperature_2m": 24,
+                },
+                "hourly": {
+                    "precipitation": ["1"] + [1] * 47,
+                },
+            }
+
+            return json.dumps(data).encode()
+
+    monkeypatch.setattr(
+        "backend.app.environmental_data.urlopen",
+        lambda url, timeout: InvalidResponse(),
+    )
+
+    try:
+        get_environmental_data(
+            latitude=-1.286389,
+            longitude=36.817223,
+        )
+    except ValueError as error:
+        assert "precipitation" in str(error).lower()
+        assert "numeric" in str(error).lower()
+    else:
+        raise AssertionError(
+            "Expected ValueError for non-numeric precipitation"
+        )
+
+
+def test_environmental_data_rejects_non_list_precipitation(
+    monkeypatch,
+):
+    class InvalidResponse:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc_value, traceback):
+            pass
+
+        def read(self):
+            data = {
+                "current": {
+                    "temperature_2m": 24,
+                },
+                "hourly": {
+                    "precipitation": "invalid",
+                },
+            }
+
+            return json.dumps(data).encode()
+
+    monkeypatch.setattr(
+        "backend.app.environmental_data.urlopen",
+        lambda url, timeout: InvalidResponse(),
+    )
+
+    try:
+        get_environmental_data(
+            latitude=-1.286389,
+            longitude=36.817223,
+        )
+    except ValueError as error:
+        assert "precipitation" in str(error).lower()
+        assert "list" in str(error).lower()
+    else:
+        raise AssertionError(
+            "Expected ValueError for non-list precipitation"
+        )
+
+
+def test_environmental_data_rejects_negative_precipitation(
+    monkeypatch,
+):
+    class InvalidResponse:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc_value, traceback):
+            pass
+
+        def read(self):
+            data = {
+                "current": {
+                    "temperature_2m": 24,
+                },
+                "hourly": {
+                    "precipitation": [-1] + [1] * 47,
+                },
+            }
+
+            return json.dumps(data).encode()
+
+    monkeypatch.setattr(
+        "backend.app.environmental_data.urlopen",
+        lambda url, timeout: InvalidResponse(),
+    )
+
+    try:
+        get_environmental_data(
+            latitude=-1.286389,
+            longitude=36.817223,
+        )
+    except ValueError as error:
+        assert "precipitation" in str(error).lower()
+        assert "negative" in str(error).lower()
+    else:
+        raise AssertionError(
+            "Expected ValueError for negative precipitation"
+        )
