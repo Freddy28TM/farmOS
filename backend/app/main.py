@@ -1,4 +1,5 @@
 from fastapi import Depends, FastAPI, HTTPException
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from fastapi.middleware.cors import CORSMiddleware
 
 from pydantic import BaseModel, Field, field_validator
@@ -13,12 +14,44 @@ from backend.app.database import Base, engine, get_db
 from backend.app.security import (
     create_access_token,
     hash_password,
+    verify_access_token,
     verify_password,
 )
 from backend.app import models
 
 
 app = FastAPI(title="FarmOS API")
+
+bearer_scheme = HTTPBearer()
+
+
+def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+    db: Session = Depends(get_db),
+):
+    try:
+        user_id = verify_access_token(credentials.credentials)
+    except (RuntimeError, ValueError):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid authentication credentials",
+        )
+
+    user = db.scalar(
+        select(models.User).where(
+            models.User.id == user_id
+        )
+    )
+
+    if user is None:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid authentication credentials",
+        )
+
+    return user
+
+
 
 
 Base.metadata.create_all(bind=engine)
@@ -93,6 +126,11 @@ class LoginRequest(BaseModel):
 class LoginResponse(BaseModel):
     access_token: str
     token_type: str
+
+
+class CurrentUserResponse(BaseModel):
+    id: int
+    email: str
 
 
 class WaterRiskRequest(BaseModel):
@@ -196,6 +234,16 @@ def login(
     return {
         "access_token": access_token,
         "token_type": "bearer",
+    }
+
+
+@app.get("/me", response_model=CurrentUserResponse)
+def get_me(
+    current_user: models.User = Depends(get_current_user),
+):
+    return {
+        "id": current_user.id,
+        "email": current_user.email,
     }
 
 
