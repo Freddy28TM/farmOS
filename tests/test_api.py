@@ -369,5 +369,5 @@ def test_water_risk_end_to_end_flow(monkeypatch):
     )
 
     assert data["context"] == (
-        "Crop: maize, Growth stage: flowering"
+        "Location: (-1.286389, 36.817223); Crop: maize; Growth stage: flowering."
     )

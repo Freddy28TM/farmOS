@@ -69,10 +69,18 @@ def water_risk(request: WaterRiskRequest):
             detail=str(error),
         )
 
-    return assess_water_risk(
+    result = assess_water_risk(
         recent_rainfall=environmental_data["recent_rainfall"],
         forecast_rainfall=environmental_data["forecast_rainfall"],
         temperature=environmental_data["temperature"],
         crop=request.crop,
         growth_stage=request.growth_stage,
     )
+
+    result["context"] = (
+        f"Location: ({request.latitude}, {request.longitude}); "
+        f"Crop: {request.crop}; "
+        f"Growth stage: {request.growth_stage}."
+    )
+
+    return result
