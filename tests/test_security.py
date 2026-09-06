@@ -1,4 +1,11 @@
-from backend.app.security import hash_password, verify_password
+import pytest
+
+from backend.app.security import (
+    create_access_token,
+    hash_password,
+    verify_access_token,
+    verify_password,
+)
 
 
 def test_password_is_hashed():
@@ -47,3 +54,73 @@ def test_hash_can_be_verified_after_multiple_hashes():
 
     assert verify_password(password, first_hash)
     assert verify_password(password, second_hash)
+
+
+def test_access_token_contains_user_id(monkeypatch):
+    monkeypatch.setenv(
+        "FARMOS_JWT_SECRET",
+        "test-secret-for-farmos",
+    )
+
+    token = create_access_token(user_id=42)
+
+    assert isinstance(token, str)
+    assert verify_access_token(token) == 42
+
+
+def test_access_token_rejects_tampering(monkeypatch):
+    monkeypatch.setenv(
+        "FARMOS_JWT_SECRET",
+        "test-secret-for-farmos",
+    )
+
+    token = create_access_token(user_id=42)
+
+    parts = token.split(".")
+
+    assert len(parts) == 3
+
+    tampered_payload = (
+        parts[1][:-1]
+        + ("a" if parts[1][-1] != "a" else "b")
+    )
+
+    tampered_token = ".".join(
+        [
+            parts[0],
+            tampered_payload,
+            parts[2],
+        ]
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="Invalid access token",
+    ):
+        verify_access_token(tampered_token)
+
+
+def test_access_token_requires_secret(monkeypatch):
+    monkeypatch.delenv(
+        "FARMOS_JWT_SECRET",
+        raising=False,
+    )
+
+    with pytest.raises(
+        RuntimeError,
+        match="FARMOS_JWT_SECRET",
+    ):
+        create_access_token(user_id=42)
+
+
+def test_invalid_access_token_is_rejected(monkeypatch):
+    monkeypatch.setenv(
+        "FARMOS_JWT_SECRET",
+        "test-secret-for-farmos",
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="Invalid access token",
+    ):
+        verify_access_token("not-a-real-token")
