@@ -133,6 +133,43 @@ class CurrentUserResponse(BaseModel):
     email: str
 
 
+class FarmCreateRequest(BaseModel):
+    name: str = Field(..., min_length=1, max_length=255)
+    latitude: float = Field(..., ge=-90, le=90)
+    longitude: float = Field(..., ge=-180, le=180)
+    crop: str
+    growth_stage: str = Field(
+        ...,
+        pattern="^(germination|vegetative|flowering|maturity)$",
+    )
+
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, value):
+        value = value.strip()
+
+        if not value:
+            raise ValueError("Farm name cannot be empty")
+
+        return value
+
+    @field_validator("crop")
+    @classmethod
+    def validate_crop(cls, value):
+        if value != "maize":
+            raise ValueError("Crop must be maize")
+        return value
+
+
+class FarmResponse(BaseModel):
+    id: int
+    name: str
+    latitude: float
+    longitude: float
+    crop: str
+    growth_stage: str
+
+
 class WaterRiskRequest(BaseModel):
     latitude: float = Field(..., ge=-90, le=90)
     longitude: float = Field(..., ge=-180, le=180)
