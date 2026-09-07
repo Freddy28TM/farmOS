@@ -1,92 +1,59 @@
-from fastapi import Depends, FastAPI, HTTPException
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+import re
+
+from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
-
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field, field_validator
-
 from sqlalchemy import select
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from backend.app import models
+from backend.app.database import Base, engine, get_db
 from backend.app.decision_engine import assess_water_risk
 from backend.app.environmental_data import get_environmental_data
-from backend.app.database import Base, engine, get_db
 from backend.app.security import (
     create_access_token,
     hash_password,
     verify_access_token,
     verify_password,
 )
-from backend.app import models
 
 
 app = FastAPI(title="FarmOS API")
 
-bearer_scheme = HTTPBearer()
-
-
-def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
-    db: Session = Depends(get_db),
-):
-    try:
-        user_id = verify_access_token(credentials.credentials)
-    except (RuntimeError, ValueError):
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid authentication credentials",
-        )
-
-    user = db.scalar(
-        select(models.User).where(
-            models.User.id == user_id
-        )
-    )
-
-    if user is None:
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid authentication credentials",
-        )
-
-    return user
-
-
-
-
-Base.metadata.create_all(bind=engine)
-
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://127.0.0.1:5500"],
+    allow_origins=[
+        "http://127.0.0.1:5500",
+        "http://localhost:5500",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
+Base.metadata.create_all(bind=engine)
+
+security = HTTPBearer()
+
+EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+
 class RegistrationRequest(BaseModel):
-    email: str = Field(..., min_length=3, max_length=255)
+    email: str
     password: str = Field(..., min_length=8, max_length=128)
 
     @field_validator("email")
     @classmethod
-    def validate_email(cls, value):
+    def normalize_email(cls, value):
         value = value.strip().lower()
 
-        if "@" not in value or value.startswith("@") or value.endswith("@"):
-            raise ValueError("Invalid email address")
+        if not value:
+            raise ValueError("Email cannot be empty")
 
-        if value.count("@") != 1:
-            raise ValueError("Invalid email address")
-
-        local_part, domain = value.split("@")
-
-        if not local_part or "." not in domain:
-            raise ValueError("Invalid email address")
-
-        if domain.startswith(".") or domain.endswith("."):
+        if not EMAIL_PATTERN.match(value):
             raise ValueError("Invalid email address")
 
         return value
@@ -98,27 +65,16 @@ class RegistrationResponse(BaseModel):
 
 
 class LoginRequest(BaseModel):
-    email: str = Field(..., min_length=3, max_length=255)
-    password: str = Field(..., min_length=1, max_length=128)
+    email: str
+    password: str
 
     @field_validator("email")
     @classmethod
-    def validate_email(cls, value):
+    def normalize_email(cls, value):
         value = value.strip().lower()
 
-        if "@" not in value or value.startswith("@") or value.endswith("@"):
-            raise ValueError("Invalid email address")
-
-        if value.count("@") != 1:
-            raise ValueError("Invalid email address")
-
-        local_part, domain = value.split("@")
-
-        if not local_part or "." not in domain:
-            raise ValueError("Invalid email address")
-
-        if domain.startswith(".") or domain.endswith("."):
-            raise ValueError("Invalid email address")
+        if not value:
+            raise ValueError("Email cannot be empty")
 
         return value
 
@@ -158,6 +114,7 @@ class FarmCreateRequest(BaseModel):
     def validate_crop(cls, value):
         if value != "maize":
             raise ValueError("Crop must be maize")
+
         return value
 
 
@@ -184,6 +141,7 @@ class WaterRiskRequest(BaseModel):
     def validate_crop(cls, value):
         if value != "maize":
             raise ValueError("Crop must be maize")
+
         return value
 
 
@@ -197,6 +155,29 @@ class WaterRiskResponse(BaseModel):
     context: str
 
 
+def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: Session = Depends(get_db),
+):
+    try:
+        user_id = verify_access_token(credentials.credentials)
+    except (ValueError, RuntimeError):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid access token",
+        )
+
+    user = db.get(models.User, user_id)
+
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found",
+        )
+
+    return user
+
+
 @app.get("/")
 def root():
     return {"message": "FarmOS API is running"}
@@ -205,7 +186,7 @@ def root():
 @app.post(
     "/register",
     response_model=RegistrationResponse,
-    status_code=201,
+    status_code=status.HTTP_201_CREATED,
 )
 def register(
     request: RegistrationRequest,
@@ -219,7 +200,7 @@ def register(
 
     if existing_user is not None:
         raise HTTPException(
-            status_code=409,
+            status_code=status.HTTP_409_CONFLICT,
             detail="Email is already registered",
         )
 
@@ -229,21 +210,10 @@ def register(
     )
 
     db.add(user)
+    db.commit()
+    db.refresh(user)
 
-    try:
-        db.commit()
-        db.refresh(user)
-    except IntegrityError:
-        db.rollback()
-        raise HTTPException(
-            status_code=409,
-            detail="Email is already registered",
-        )
-
-    return {
-        "id": user.id,
-        "email": user.email,
-    }
+    return user
 
 
 @app.post("/login", response_model=LoginResponse)
@@ -262,7 +232,7 @@ def login(
         user.password_hash,
     ):
         raise HTTPException(
-            status_code=401,
+            status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid credentials",
         )
 
@@ -278,13 +248,14 @@ def login(
 def get_me(
     current_user: models.User = Depends(get_current_user),
 ):
-    return {
-        "id": current_user.id,
-        "email": current_user.email,
-    }
+    return current_user
 
 
-@app.post("/farms", response_model=FarmResponse, status_code=201)
+@app.post(
+    "/farms",
+    response_model=FarmResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_farm(
     request: FarmCreateRequest,
     current_user: models.User = Depends(get_current_user),
@@ -306,18 +277,34 @@ def create_farm(
     return farm
 
 
+@app.get("/farms", response_model=list[FarmResponse])
+def list_farms(
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    farms = db.scalars(
+        select(models.Farm)
+        .where(models.Farm.user_id == current_user.id)
+        .order_by(models.Farm.id)
+    ).all()
+
+    return farms
+
+
 @app.post("/water-risk", response_model=WaterRiskResponse)
-def water_risk(request: WaterRiskRequest):
+def water_risk(
+    request: WaterRiskRequest,
+):
     try:
         environmental_data = get_environmental_data(
-            latitude=request.latitude,
-            longitude=request.longitude,
+            request.latitude,
+            request.longitude,
         )
     except ValueError as error:
         raise HTTPException(
-            status_code=503,
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=str(error),
-        )
+        ) from error
 
     result = assess_water_risk(
         recent_rainfall=environmental_data["recent_rainfall"],
@@ -327,6 +314,8 @@ def water_risk(request: WaterRiskRequest):
         growth_stage=request.growth_stage,
     )
 
+    # API-level context combines the farm location with
+    # the crop and growth-stage information used by the engine.
     result["context"] = (
         f"Location: ({request.latitude}, {request.longitude}); "
         f"Crop: {request.crop}; "
