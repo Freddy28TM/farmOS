@@ -1,220 +1,442 @@
-# FarmOS Requirements
+# FarmOS Problem Definition
 
-## 1. Primary User
+## 1. Problem Statement
 
-The primary user is a small-scale farmer who needs help interpreting environmental conditions and making informed agricultural decisions.
+Small-scale farmers depend heavily on environmental conditions to make decisions about planting, water management, crop protection, and harvesting.
 
-The system should not assume that the user has advanced technical knowledge.
+However, important environmental information is often:
 
-The interface should therefore prioritize:
+* Difficult to interpret
+* Spread across multiple sources
+* Not presented in an agricultural context
+* Difficult to translate into timely farm-level decisions
 
-* Simple language
-* Clear recommendations
-* Visual risk indicators
-* Explanations
-* Uncertainty information
-* Actionable information
+Weather information may tell a farmer that rainfall is low or temperatures are high, but raw environmental measurements do not necessarily explain what those conditions mean for a particular crop or growth stage.
+
+This creates a gap between:
+
+```text
+Environmental Data
+       ↓
+Agricultural Understanding
+       ↓
+Farm Decision
+```
+
+FarmOS is designed to address this gap.
 
 ---
 
-## 2. Farmer Inputs
+## 2. The Core Problem
 
-The MVP should allow the farmer to provide:
+The core problem is not simply a lack of environmental data.
 
-* Location
-* Crop
-* Farm size
-* Planting date
-* Crop growth stage
-* Optional observations about current farm conditions
+The problem is the difficulty of converting available environmental information into **clear, understandable, and actionable agricultural risk information**.
 
-Example:
+A farmer may have access to:
+
+* Recent rainfall information
+* Weather forecasts
+* Temperature information
+* Crop information
+* Knowledge of the crop's growth stage
+
+But these inputs may not be combined into a single decision-support workflow.
+
+FarmOS provides that missing layer:
 
 ```text
-Location: Nairobi, Kenya
-Crop: Maize
-Farm size: 1 acre
-Planting date: 2026-08-15
-Growth stage: Early growth
+Environmental Conditions
+          +
+Farm Context
+          ↓
+Agricultural Risk Assessment
+          ↓
+Explanation
+          ↓
+Practical Recommendation
 ```
 
 ---
 
-## 3. Environmental Inputs
+## 3. MVP Problem Focus
 
-The system should be designed to accept environmental information such as:
+The FarmOS MVP focuses on **water-related risk**.
 
-* Current weather
-* Short-term weather forecasts
-* Rainfall
+Water availability and water stress can be influenced by conditions such as:
+
+* Recent rainfall
+* Expected rainfall
 * Temperature
-* Seasonal climate information
-* Historical observations where available
+* Crop type
+* Crop growth stage
 
-The architecture should allow additional environmental data sources to be added later.
+The MVP uses maize as the primary crop context.
 
-Possible future sources include:
-
-* Satellite data
-* IoT sensors
-* Soil measurements
-* Agricultural datasets
-* Additional weather services
+The objective is to demonstrate a complete and understandable decision-support workflow rather than attempting to solve every agricultural problem at once.
 
 ---
 
-## 4. Risk Assessment
+## 4. Why Water Risk Matters
 
-FarmOS should analyze available information and identify relevant agricultural risks.
+Water availability is an important factor in crop development.
 
-Possible risks include:
+Periods of limited rainfall combined with elevated temperatures can increase the potential for water stress.
 
-* Water stress
+The significance of these conditions can also vary according to the crop's growth stage.
+
+For example, a period of limited rainfall may have different implications depending on whether a crop is:
+
+* Germinating
+* Developing vegetatively
+* Flowering
+* Reaching maturity
+
+FarmOS therefore combines environmental conditions with crop growth-stage context rather than treating weather information in isolation.
+
+---
+
+## 5. The Data-to-Decision Gap
+
+A major challenge addressed by FarmOS is the gap between information and action.
+
+A traditional weather-data workflow may look like:
+
+```text
+Weather Data
+     ↓
+Rainfall: Low
+Temperature: High
+Forecast: Dry
+```
+
+The farmer still has to determine:
+
+```text
+What does this mean for my crop?
+Is the situation becoming risky?
+Why is it risky?
+What should I monitor?
+```
+
+FarmOS adds a decision-support layer:
+
+```text
+Weather Data
+     +
+Farm Context
+     ↓
+Risk Analysis
+     ↓
+Risk Level
+     ↓
+Contributing Factors
+     ↓
+Recommendation
+```
+
+This is the central problem the system is designed to address.
+
+---
+
+## 6. Explainability Problem
+
+Agricultural decision-support systems should not only provide an outcome.
+
+A recommendation without an explanation can be difficult for a farmer to evaluate or trust.
+
+For this reason, FarmOS is designed to expose the factors contributing to an assessment.
+
+Instead of returning only:
+
+```text
+HIGH RISK
+```
+
+the system can provide information such as:
+
+```text
+Low recent rainfall
+High temperature
+Maize is in a water-sensitive flowering stage
+```
+
+This allows the user to understand why the assessment was produced.
+
+---
+
+## 7. Timing Problem
+
+Agricultural decisions are often time-sensitive.
+
+Environmental conditions can change quickly, and a farmer may need to recognize increasing risk before the consequences become severe.
+
+FarmOS is therefore designed around repeated assessment rather than a single permanent prediction.
+
+The intended workflow is:
+
+```text
+Current Conditions
+       ↓
+Risk Assessment
+       ↓
+Recommendation
+       ↓
+Farmer Action
+       ↓
+Updated Conditions
+       ↓
+New Assessment
+```
+
+This makes the system suitable for ongoing decision support as new environmental information becomes available.
+
+---
+
+## 8. Fragmented Information
+
+Farmers may need to consider information from different sources when making decisions.
+
+Examples include:
+
+* Weather observations
+* Weather forecasts
+* Crop information
+* Growth stage
+* Farm location
+* Direct farm observations
+
+Without a structured system, these inputs can remain disconnected.
+
+FarmOS brings relevant information together into a single workflow:
+
+```text
+Farm Information
+       +
+Environmental Information
+       +
+Agricultural Rules
+       ↓
+Unified Risk Assessment
+```
+
+---
+
+## 9. Trust and Transparency
+
+A decision-support system should provide information that users can understand and evaluate.
+
+FarmOS therefore prioritizes:
+
+* Transparent rules
+* Visible contributing factors
+* Explainable recommendations
+* Deterministic behavior
+* Clear limitations
+
+The MVP does not attempt to hide uncertainty behind an unexplained AI-generated answer.
+
+Instead, the current decision model is intentionally simple enough for its reasoning to be inspected and tested.
+
+---
+
+## 10. Target Users
+
+The primary target users are **small-scale farmers** who need accessible environmental decision support.
+
+The system is also designed to be useful to:
+
+* Agricultural technology developers
+* Researchers
+* Agricultural organizations
+* Extension-oriented applications
+* Future farm-management platforms
+
+The MVP concentrates on the farmer-facing decision-support use case.
+
+---
+
+## 11. Intended Outcome
+
+FarmOS aims to help transform environmental information into a clearer decision-support signal.
+
+The intended outcome is:
+
+```text
+Raw Environmental Data
+        ↓
+Contextual Interpretation
+        ↓
+Risk Assessment
+        ↓
+Explainable Recommendation
+        ↓
+Better-Informed Farm Decision
+```
+
+FarmOS does not make decisions on behalf of farmers.
+
+It provides information and recommendations intended to support human decision-making.
+
+---
+
+## 12. Problem Scope
+
+The current problem definition deliberately focuses on a manageable MVP.
+
+### Included
+
+* Farm location
+* Crop
+* Growth stage
+* Recent rainfall
+* Forecast rainfall
+* Temperature
+* Water-related risk
+* Explainable recommendations
+* Farmer feedback
+
+### Not Yet Included
+
+* Full farm-management planning
+* Automated irrigation control
+* Pest and disease prediction
+* Soil laboratory analysis
+* Satellite-based crop monitoring
+* IoT sensor networks
+* Comprehensive climate forecasting
+* Automated agricultural decision execution
+
+These areas may be considered as future extensions.
+
+---
+
+## 13. Why FarmOS Is Needed
+
+Existing environmental information can be valuable without necessarily being sufficient for a farm-level decision.
+
+FarmOS addresses the missing connection between:
+
+```text
+"What are the environmental conditions?"
+```
+
+and:
+
+```text
+"What might these conditions mean for my farm?"
+```
+
+The system provides a structured pathway from environmental observations to contextualized risk information.
+
+Its value is therefore not simply collecting more data.
+
+Its value is **interpreting relevant data in the context of a specific farm and crop**.
+
+---
+
+## 14. Problem-Solution Alignment
+
+The problem and FarmOS solution can be summarized as follows:
+
+| Problem                                              | FarmOS Response                                            |
+| ---------------------------------------------------- | ---------------------------------------------------------- |
+| Raw weather data can be difficult to interpret       | Converts environmental inputs into risk assessments        |
+| Environmental information may lack farm context      | Associates assessments with farm location and crop context |
+| Crop growth stage affects agricultural risk          | Incorporates growth-stage adjustments                      |
+| Users may not understand why risk is high            | Provides contributing factors and explanations             |
+| Conditions change over time                          | Supports repeated assessments                              |
+| Unexplained AI can reduce transparency               | Uses deterministic rules for the MVP                       |
+| Previous assessments can be lost without persistence | Stores assessment history                                  |
+| Recommendations need real-world evaluation           | Supports farmer feedback                                   |
+
+---
+
+## 15. Success Criteria
+
+The MVP addresses the problem successfully when it can:
+
+1. Accept a user's farm context.
+2. Obtain relevant environmental information.
+3. Evaluate water-related risk using explicit rules.
+4. Produce a clear risk level.
+5. Identify the factors contributing to that risk.
+6. Provide an understandable recommendation.
+7. Persist the assessment.
+8. Allow farmer feedback to be recorded.
+9. Protect user and farm data through authentication and authorization.
+10. Produce reproducible results for the same inputs.
+
+These criteria define the practical boundary of the current FarmOS problem-solving approach.
+
+---
+
+## 16. Responsible Decision Support
+
+FarmOS is intended as a **decision-support system**, not a replacement for farmers, agricultural professionals, or local expertise.
+
+Environmental conditions can vary significantly between farms and locations.
+
+The system's recommendations should therefore be interpreted together with:
+
+* Local conditions
+* Direct farm observations
+* Farmer experience
+* Appropriate agricultural guidance
+* Other relevant information
+
+The MVP is designed to support better-informed decisions rather than automatically execute agricultural actions.
+
+---
+
+## 17. Future Problem Expansion
+
+Once the core water-risk workflow is validated, the same decision-support approach can be extended to other agricultural challenges.
+
+Potential areas include:
+
+* Drought risk
 * Excess rainfall
-* Flooding
 * Heat stress
-* Drought
-* Unfavorable planting conditions
+* Pest risk
+* Crop disease risk
+* Soil-moisture risk
+* Extreme-weather events
+* Seasonal planning
+* Climate variability
 
-The system should not claim certainty about future events.
-
-Risk should be represented using understandable levels such as:
-
-```text
-LOW
-MEDIUM
-HIGH
-```
-
-Where appropriate, the system should also communicate confidence or uncertainty.
-
----
-
-## 5. Recommendations
-
-For identified risks, FarmOS should provide practical recommendations.
-
-Each recommendation should contain:
-
-### Risk
-
-What could affect the farm?
-
-### Recommendation
-
-What action should the farmer consider?
-
-### Reason
-
-Why did FarmOS produce this recommendation?
-
-### Confidence
-
-How certain is the available information?
-
-Example:
+The underlying problem remains the same:
 
 ```text
-Risk: Elevated water stress
-
-Recommendation:
-Monitor soil moisture and consider water conservation measures.
-
-Reason:
-Current conditions and available environmental information
-indicate increased water-stress risk.
-
-Confidence:
-Medium
+Complex Environmental Information
+              ↓
+Agricultural Context
+              ↓
+Understandable Risk
+              ↓
+Actionable Decision Support
 ```
 
----
-
-## 6. Explainability
-
-FarmOS should make recommendations understandable.
-
-The user should be able to determine:
-
-```text
-DATA
- ↓
-ANALYSIS
- ↓
-RISK
- ↓
-RECOMMENDATION
-```
-
-The system should avoid presenting unexplained AI-generated answers as facts.
+FarmOS provides a foundation for expanding this approach while maintaining transparency and human oversight.
 
 ---
 
-## 7. Feedback
+## 18. Summary
 
-The farmer should eventually be able to provide feedback about recommendations.
+Small-scale farmers can have access to environmental information without having an easy way to translate that information into clear, farm-specific risk understanding.
 
-Example:
+FarmOS addresses this data-to-decision gap by combining:
 
-```text
-Recommendation received
-        ↓
-Action taken
-        ↓
-Observed result
-        ↓
-Feedback recorded
-```
+* Farm context
+* Environmental conditions
+* Crop information
+* Growth-stage context
+* Deterministic agricultural rules
+* Explainable risk assessments
+* Practical recommendations
+* Persistent assessment history
+* Farmer feedback
 
-This creates a feedback loop that can improve future decision support.
+The MVP demonstrates this approach through a focused water-risk workflow for maize.
 
----
-
-## 8. Future-Proof Architecture
-
-FarmOS must not depend on one specific technology.
-
-The system should allow future replacement or addition of:
-
-* AI models
-* Weather providers
-* Climate models
-* Sensors
-* Satellite data
-* User interfaces
-
-The core decision-support system should remain usable even when individual technologies change.
-
----
-
-## 9. Security Requirements
-
-The MVP should consider:
-
-* User authentication
-* Authorization
-* Input validation
-* Protection of farmer data
-* Secure API design
-* Logging of important system events
-* Protection against unauthorized access
-
-Security should be considered during development rather than added only at the end.
-
----
-
-## 10. MVP Success Criteria
-
-The first working version is successful if a user can:
-
-1. Enter farm information.
-2. Receive environmental information.
-3. Have the system assess at least one agricultural risk.
-4. Receive a recommendation.
-5. Understand why the recommendation was produced.
-6. See the uncertainty associated with the recommendation.
-7. Provide feedback.
-
-The MVP does not need to solve every agricultural problem.
-
-It needs to demonstrate one complete, reliable decision-support workflow.
+The broader goal is to establish a transparent and extensible foundation for agricultural decision support.

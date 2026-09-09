@@ -53,11 +53,20 @@ label {
     margin-top: 10px;
 }
 
-input {
+input,
+select,
+textarea {
+    width: 100%;
     padding: 12px;
     border: 1px solid #cfd6dd;
     border-radius: 8px;
     font-size: 1rem;
+    font-family: inherit;
+}
+
+textarea {
+    min-height: 110px;
+    resize: vertical;
 }
 
 button {
@@ -70,8 +79,26 @@ button {
     cursor: pointer;
 }
 
-button:hover {
+button:hover:not(:disabled) {
     opacity: 0.9;
+}
+
+button:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.button-row {
+    display: flex;
+    gap: 10px;
+}
+
+.button-row button {
+    flex: 1;
+}
+
+.secondary {
+    background: #e8edf0;
 }
 
 .result {
@@ -82,6 +109,21 @@ button:hover {
     margin-bottom: 5px;
 }
 
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 15px;
+}
+
+.section-header button {
+    margin-top: 0;
+}
+
+.muted {
+    color: #667085;
+}
+
 #error {
     padding: 12px;
     border-radius: 8px;
@@ -90,6 +132,13 @@ button:hover {
 .error {
     background: #ffe8e8;
     color: #a00000;
+}
+
+.success {
+    padding: 12px;
+    border-radius: 8px;
+    background: #e8f7e8;
+    color: #176b17;
 }
 
 .hidden {

@@ -2,369 +2,445 @@
 
 ## Explainable environmental risk intelligence for small-scale farmers
 
-FarmOS is a modular agricultural decision-support system that transforms environmental conditions into **clear, explainable, actionable risk assessments**.
+FarmOS is a modular agricultural decision-support system designed to help small-scale farmers interpret environmental conditions and make more informed decisions.
 
-The initial MVP focuses on one practical question:
+The current MVP focuses on **water-stress risk for maize**. FarmOS combines farm context, environmental data, a transparent deterministic decision engine, persistent risk assessments, explanations, recommendations, and farmer feedback into one workflow.
 
-> **Given current and near-term environmental conditions, what water-related risk should a maize farmer be aware of, and what should they consider doing next?**
-
-FarmOS combines live environmental data, farm context, deterministic decision logic, and a simple web interface to turn weather information into a decision rather than simply displaying another forecast.
+> **Agricultural decision support should be understandable, traceable, and useful to the farmer.**
 
 ---
 
 ## The Problem
 
-Small-scale farmers already have access to increasing amounts of weather information.
+Small-scale farmers often make decisions under changing and uncertain environmental conditions.
 
-The harder problem is interpreting that information:
+Rainfall may be limited or unpredictable. Temperatures may become unusually high. Weather information can describe what is happening without explaining what those conditions mean for a particular farm.
 
-* What does the forecast mean for my farm?
-* Is the current situation becoming risky?
-* Which conditions are driving that risk?
-* What should I monitor?
-* How confident should I be in the assessment?
-
-Climate variability makes this problem more important. Rainfall patterns can shift, temperatures can become extreme, and environmental conditions can change faster than farmers can comfortably interpret raw data.
-
-**FarmOS addresses the gap between environmental information and practical agricultural decision-making.**
-
----
-
-## Our Solution
-
-FarmOS takes farm context and environmental information and converts them into an explainable assessment:
+FarmOS addresses the decision-support gap between:
 
 ```text
-Farm Context
-     +
-Environmental Data
-     ↓
-Decision Engine
-     ↓
-Risk Score
-     ↓
-LOW / MEDIUM / HIGH
-     ↓
-Risk Factors
-     ↓
-Recommendation
-     ↓
-Plain-language Explanation
+Environmental information
+          +
+Farm context
+          ↓
+    Risk assessment
+          ↓
+    Explanation
+          ↓
+    Recommendation
+          ↓
+     Farmer action
+          ↓
+    Observed result
 ```
 
-The system deliberately avoids making unexplained AI predictions the foundation of the MVP.
+The goal is not simply to display environmental data or produce an unexplained prediction.
 
-Instead, the initial decision engine uses transparent, deterministic rules that can be inspected, tested, explained, and improved.
+FarmOS provides a **traceable decision-support result** that allows the farmer to understand why a risk level was produced.
 
 ---
 
-## MVP
+## MVP Scope
 
-The current MVP focuses on:
+The current MVP addresses one focused agricultural problem:
 
-**Crop:** Maize
+```text
+Crop
+Maize
 
-**Risk type:** Water stress
+Risk
+Water stress
+```
 
-**Environmental signals:**
+The assessment considers:
 
 * Recent rainfall
 * Forecast rainfall
 * Temperature
-
-**Farm context:**
-
-* Location
+* Farm location
 * Crop
 * Growth stage
 
-**Risk levels:**
-
-* LOW
-* MEDIUM
-* HIGH
-
-**Output includes:**
+The system produces:
 
 * Risk level
 * Risk score
-* Confidence
+* Confidence level
 * Contributing factors
 * Recommendation
-* Explanation
-* Farm context
+* Human-readable explanation
+* Assessment context
+* Persistent assessment record
 
-This intentionally narrow scope allows FarmOS to demonstrate a complete and testable decision-support foundation before expanding into additional crops and risk categories.
+The farmer can subsequently record:
+
+* Farmer action
+* Observed result
+
+This creates a feedback history without allowing feedback to automatically modify the decision engine.
 
 ---
 
-## Example
+## Current Capabilities
 
-A farmer provides:
+| Capability                    | Status      |
+| ----------------------------- | ----------- |
+| User registration             | Implemented |
+| User login                    | Implemented |
+| JWT authentication            | Implemented |
+| Argon2 password hashing       | Implemented |
+| Authenticated user profile    | Implemented |
+| Farm creation                 | Implemented |
+| Multiple farms per user       | Implemented |
+| Farm ownership isolation      | Implemented |
+| Environmental data retrieval  | Implemented |
+| Environmental-data validation | Implemented |
+| Maize water-stress assessment | Implemented |
+| Growth-stage adjustment       | Implemented |
+| Explainable risk factors      | Implemented |
+| Persistent risk assessments   | Implemented |
+| Assessment context storage    | Implemented |
+| Farmer feedback persistence   | Implemented |
+| API input validation          | Implemented |
+| Automated backend testing     | Implemented |
+| Static web frontend           | Implemented |
+
+The MVP deliberately focuses on a clearly defined decision problem rather than attempting to model every agricultural risk.
+
+---
+
+# How FarmOS Works
+
+The complete workflow is:
 
 ```text
-Location: Nairobi, Kenya
-Crop: Maize
-Growth stage: Flowering
+Farmer
+   │
+   ▼
+Web Frontend
+   │
+   ▼
+Authentication
+   │
+   ▼
+User-owned Farm
+   │
+   ▼
+Environmental Data
+   │
+   ▼
+Decision Engine
+   │
+   ▼
+Risk Assessment
+   │
+   ├── Risk level
+   ├── Score
+   ├── Confidence
+   ├── Factors
+   ├── Recommendation
+   └── Explanation
+   │
+   ▼
+Persistent Assessment
+   │
+   ▼
+Farmer Feedback
+   │
+   ├── Farmer action
+   └── Observed result
 ```
 
-FarmOS retrieves environmental information and evaluates it using the decision engine.
+The frontend does **not** contain the agricultural decision logic.
 
-For example, conditions involving:
+The backend coordinates authentication, authorization, farm access, environmental data retrieval, decision processing, persistence, and feedback.
+
+The decision engine remains responsible for producing the agricultural risk assessment.
+
+---
+
+# Decision Engine
+
+FarmOS currently uses a **transparent deterministic scoring model**.
+
+The same valid inputs produce predictable results, making the current MVP easy to inspect, test, and explain.
+
+## Environmental Rules
+
+| Condition             | Score |
+| --------------------- | ----: |
+| Recent rainfall < 5   |    +2 |
+| Forecast rainfall < 5 |    +2 |
+| Temperature >= 35     |    +2 |
+
+## Growth-Stage Rules
+
+Growth stage modifies severity when environmental water stress is already present.
+
+| Maize growth stage | Additional score |
+| ------------------ | ---------------: |
+| Flowering          |               +2 |
+| Germination        |               +1 |
+| Vegetative         |               +1 |
+| Maturity           |               +0 |
+
+The flowering adjustment reflects the MVP assumption that water stress during this stage deserves greater attention.
+
+## Risk Thresholds
+
+```text
+Score >= 4  → HIGH
+Score >= 2  → MEDIUM
+Score < 2   → LOW
+```
+
+## Confidence
+
+The current deterministic model uses:
+
+```text
+Score >= 2  → MEDIUM
+Score < 2   → LOW
+```
+
+Confidence is a category produced by the current model. It should not be interpreted as a guarantee that the predicted agricultural outcome will occur.
+
+## Explainability
+
+Each assessment records the factors that contributed to the result.
+
+For example:
 
 ```text
 Low recent rainfall
-+
 High temperature
-+
-Maize flowering stage
+Maize is in a water-sensitive flowering stage
 ```
 
-can increase the calculated water-stress risk.
+These factors are used to construct a human-readable explanation.
 
-The result explains **why** the risk increased rather than presenting an unexplained prediction.
+This makes the assessment traceable instead of presenting the farmer with an unexplained risk label.
 
-Example output:
+Detailed decision-engine documentation is available in:
 
-```text
-Risk: HIGH
-Confidence: MEDIUM
-
-Risk factors:
-- Low recent rainfall
-- High temperature
-- Maize is in a water-sensitive flowering stage
-
-Recommendation:
-Monitor soil moisture closely and prioritize
-appropriate water-conservation measures during flowering.
-
-Explanation:
-Water-stress risk increased because of the
-identified environmental and farm-context factors.
-```
+`docs/decision-engine.md`
 
 ---
 
-## Key Features
+# System Architecture
 
-### 🌦️ Environmental intelligence
+FarmOS separates presentation, API coordination, data access, environmental information, decision logic, and persistence.
 
-FarmOS retrieves environmental information from the Open-Meteo weather API and extracts:
+```text
+┌─────────────────────────────────┐
+│          Web Frontend           │
+│        HTML / CSS / JS          │
+└───────────────┬─────────────────┘
+                │
+                ▼
+┌─────────────────────────────────┐
+│           FastAPI API           │
+│ Authentication / Authorization  │
+│ Validation / Application Logic  │
+└───────────────┬─────────────────┘
+                │
+        ┌───────┴────────┐
+        ▼                ▼
+┌───────────────┐ ┌──────────────────┐
+│   Database    │ │ Environmental    │
+│               │ │ Data Provider    │
+│ Users         │ └────────┬─────────┘
+│ Farms         │          │
+│ Assessments   │          │
+│ Feedback      │          │
+└───────┬───────┘          │
+        │                   │
+        └────────┬──────────┘
+                 ▼
+       ┌─────────────────────┐
+       │    Decision Engine  │
+       │                     │
+       │ Deterministic Rules │
+       │ Risk Calculation    │
+       │ Explanation         │
+       └──────────┬──────────┘
+                  │
+                  ▼
+       ┌─────────────────────┐
+       │ Persisted Assessment│
+       │ + Farmer Feedback   │
+       └─────────────────────┘
+```
 
-* Current temperature
-* Recent precipitation
-* Forecast precipitation
+The architecture is intentionally modular so that environmental providers, crops, agricultural models, and additional decision-support components can be introduced without redesigning the entire application.
 
-The environmental-data layer validates the returned values before passing them to the decision engine.
+See:
 
-### 🧠 Explainable decision engine
+`docs/architecture.md`
 
-The decision engine is implemented as a deterministic Python component independent of FastAPI.
+---
 
-This provides:
+# Data Model
 
-* Transparent rules
-* Deterministic results
-* Easy testing
-* Clear contributing factors
-* A replaceable decision layer
+## User
 
-### 👨‍🌾 Farm management
+A user record contains:
 
-Authenticated users can create and retrieve their farms.
+* ID
+* Email
+* Password hash
+* Creation timestamp
 
-Farm records include:
+Passwords are never stored as plaintext.
 
-* Farm name
-* Location
+## Farm
+
+A farm record contains:
+
+* ID
+* Owner
+* Name
+* Latitude
+* Longitude
 * Crop
 * Growth stage
+* Creation timestamp
 
-Farm ownership is associated with the authenticated user.
+Each farm belongs to its authenticated owner.
 
-### 🔐 Authentication and security
+## Risk Assessment
 
-FarmOS includes:
+An assessment stores:
 
-* User registration
-* Password hashing
-* JWT authentication
-* Authenticated user identification
-* User-owned farm records
-* API input validation
-* Coordinate validation
-* Crop validation
-* Growth-stage validation
+* Farm
+* Recent rainfall
+* Forecast rainfall
+* Temperature
+* Risk level
+* Score
+* Confidence
+* Factors
+* Recommendation
+* Explanation
+* Context
+* Farmer action
+* Observed result
+* Feedback timestamp
+* Creation timestamp
 
-Passwords are not stored as plaintext. Password hashing uses Argon2 through `pwdlib`.
+This means an assessment is a persistent record associated with the farm rather than only a temporary API response.
 
-JWT signing requires the `FARMOS_JWT_SECRET` environment variable.
+---
 
-### 📊 Explainable risk output
+# Authentication and Security
 
-Each assessment can communicate:
+FarmOS uses authenticated user accounts and ownership-based authorization.
 
-```text
-Risk Level
-Score
-Confidence
-Factors
-Recommendation
-Explanation
-Context
+## Registration
+
+Users register with:
+
+* Email
+* Password
+
+Passwords are protected using Argon2-based password hashing through `pwdlib`.
+
+## Login
+
+Successful authentication produces a JWT access token.
+
+Protected API requests use:
+
+```http
+Authorization: Bearer <access_token>
 ```
 
-This makes the reasoning behind an assessment visible to the user.
+## JWT Secret
 
-### 🧪 Automated testing
-
-FarmOS includes tests covering:
-
-* Database behavior
-* Farm creation and retrieval
-* Current-user authentication
-* Environmental-data validation
-* Decision-engine behavior
-* API behavior
-* Registration
-* Login
-* Security
-* Invalid inputs
-* Authentication failures
-* Environmental-data failures
-* End-to-end risk-assessment behavior
-
-The project is designed so that core decision logic can be tested independently from the web framework.
-
----
-
-## Architecture
-
-FarmOS separates the major system responsibilities:
+The JWT signing secret is supplied through the environment variable:
 
 ```text
-                     ┌──────────────────┐
-                     │     Farmer       │
-                     └────────┬─────────┘
-                              │
-                              ▼
-                     ┌──────────────────┐
-                     │    Frontend      │
-                     │ HTML/CSS/JS      │
-                     └────────┬─────────┘
-                              │
-                              ▼
-                     ┌──────────────────┐
-                     │   FastAPI API    │
-                     └───────┬──────────┘
-                             │
-              ┌──────────────┼──────────────┐
-              │              │              │
-              ▼              ▼              ▼
-       Authentication      Farm Data   Environmental Data
-              │              │              │
-              └──────────────┼──────────────┘
-                             ▼
-                    ┌──────────────────┐
-                    │ Decision Engine  │
-                    └────────┬─────────┘
-                             │
-                             ▼
-                    ┌──────────────────┐
-                    │ Risk Assessment  │
-                    └────────┬─────────┘
-                             │
-                             ▼
-                    ┌──────────────────┐
-                    │ Recommendation   │
-                    │ + Explanation    │
-                    └──────────────────┘
+FARMOS_JWT_SECRET
 ```
 
-The architecture is intentionally modular so that additional environmental providers, crops, risk models, sensors, satellite data, or machine-learning components can be introduced without replacing the entire application.
+The secret is not stored in source code.
+
+Tokens also have a defined expiration period.
+
+## Authorization and Data Isolation
+
+Farm data is associated with its owning user.
+
+Protected operations verify that the authenticated user owns the requested farm.
+
+Risk assessments are protected through their relationship to the user's farm.
+
+This prevents an authenticated user from accessing another user's farm data through the API.
 
 ---
 
-## Technology Stack
+# Environmental Data
 
-| Layer              | Technology                      |
-| ------------------ | ------------------------------- |
-| Backend API        | FastAPI                         |
-| Language           | Python                          |
-| Database           | SQLite                          |
-| ORM                | SQLAlchemy                      |
-| Authentication     | JWT                             |
-| Password hashing   | Argon2 via `pwdlib`             |
-| Validation         | Pydantic                        |
-| Frontend           | HTML / CSS / Vanilla JavaScript |
-| Environmental data | Open-Meteo                      |
-| Testing            | pytest                          |
+FarmOS currently uses the configured weather-data provider to obtain environmental information.
+
+The environmental-data layer separates provider responses from the decision engine by normalizing the information consumed by the risk model.
+
+The system validates environmental responses before using them for assessment.
+
+If environmental information cannot safely be used, the API returns an appropriate service error rather than generating an assessment from invalid data.
+
+The current environmental integration uses **Open-Meteo**.
 
 ---
 
-## Project Structure
+# Persistence and Feedback
+
+FarmOS maintains a persistent relationship between environmental conditions, assessments, recommendations, and farmer observations.
 
 ```text
-farmOS/
-├── backend/
-│   ├── __init__.py
-│   ├── requirements.txt
-│   └── app/
-│       ├── __init__.py
-│       ├── database.py
-│       ├── decision_engine.py
-│       ├── environmental_data.py
-│       ├── main.py
-│       ├── models.py
-│       └── security.py
-│
-├── frontend/
-│   ├── index.html
-│   ├── style.css
-│   └── app.js
-│
-├── tests/
-│   ├── test_api.py
-│   ├── test_current_user.py
-│   ├── test_database.py
-│   ├── test_decision_engine.py
-│   ├── test_environmental_data.py
-│   ├── test_farms.py
-│   ├── test_login.py
-│   ├── test_registration.py
-│   └── test_security.py
-│
-├── docs/
-│   ├── architecture.md
-│   ├── decision-engine.md
-│   ├── problem.md
-│   └── requirements.md
-│
-├── .gitignore
-└── README.md
+Environmental conditions
+          ↓
+     Risk assessment
+          ↓
+     Recommendation
+          ↓
+      Farmer action
+          ↓
+     Observed result
 ```
+
+Feedback is stored for future evaluation and improvement.
+
+The current MVP **does not automatically retrain or modify the decision engine from feedback**.
+
+This separation keeps the current decision process deterministic and auditable.
 
 ---
 
-## API
+# API
 
-The current backend exposes the following primary endpoints:
+The primary API endpoints are:
 
-| Method | Endpoint      | Purpose                             |
-| ------ | ------------- | ----------------------------------- |
-| GET    | `/`           | API health/root response            |
-| POST   | `/register`   | Register a user                     |
-| POST   | `/login`      | Authenticate and obtain JWT         |
-| GET    | `/me`         | Retrieve the authenticated user     |
-| POST   | `/farms`      | Create an authenticated user's farm |
-| GET    | `/farms`      | List the authenticated user's farms |
-| POST   | `/water-risk` | Generate a water-risk assessment    |
+| Method | Endpoint                                     | Purpose                            | Authentication |
+| ------ | -------------------------------------------- | ---------------------------------- | -------------- |
+| GET    | `/`                                          | API health/root response           | No             |
+| POST   | `/register`                                  | Register a user                    | No             |
+| POST   | `/login`                                     | Authenticate and obtain JWT        | No             |
+| GET    | `/me`                                        | Retrieve authenticated user        | Yes            |
+| POST   | `/farms`                                     | Create a user's farm               | Yes            |
+| GET    | `/farms`                                     | List the user's farms              | Yes            |
+| POST   | `/water-risk`                                | Generate and persist an assessment | Yes            |
+| POST   | `/risk-assessments/{assessment_id}/feedback` | Record farmer feedback             | Yes            |
 
-### Water-risk request
+---
+
+# Farm Creation
+
+Example request:
 
 ```json
 {
+  "name": "Demo Farm",
   "latitude": -1.286389,
   "longitude": 36.817223,
   "crop": "maize",
@@ -372,10 +448,43 @@ The current backend exposes the following primary endpoints:
 }
 ```
 
-### Response
+The current MVP validates:
+
+* Latitude range
+* Longitude range
+* Farm name length
+* Supported crop
+* Supported growth stage
+
+---
+
+# Water-Risk Assessment
+
+The assessment endpoint operates on a persisted farm.
+
+Example request:
 
 ```json
 {
+  "farm_id": 1
+}
+```
+
+The backend:
+
+1. Authenticates the user.
+2. Verifies farm ownership.
+3. Retrieves environmental data.
+4. Validates the environmental data.
+5. Calls the decision engine.
+6. Creates a persistent risk-assessment record.
+7. Returns the assessment.
+
+Example response:
+
+```json
+{
+  "assessment_id": 1,
   "risk_level": "HIGH",
   "score": 6,
   "confidence": "MEDIUM",
@@ -392,29 +501,156 @@ The current backend exposes the following primary endpoints:
 
 ---
 
-## Running FarmOS Locally
+# Farmer Feedback
 
-### 1. Clone the repository
+Feedback is submitted against a persisted assessment.
+
+Example:
+
+```json
+{
+  "farmer_action": "Monitored soil moisture and applied appropriate water-conservation measures.",
+  "observed_result": "Soil moisture remained adequate during the following period."
+}
+```
+
+Endpoint:
+
+```text
+POST /risk-assessments/{assessment_id}/feedback
+```
+
+The feedback is associated with the original assessment so that the assessment history remains traceable.
+
+---
+
+# Frontend
+
+The current frontend is a lightweight static web application built with:
+
+* HTML
+* CSS
+* Vanilla JavaScript
+
+The workflow is:
+
+```text
+Register
+   ↓
+Login
+   ↓
+Load user's farms
+   ↓
+Create/select farm
+   ↓
+Request water-risk assessment
+   ↓
+Display result
+   ↓
+Submit feedback
+```
+
+The frontend communicates with the FastAPI backend.
+
+It does not implement the agricultural scoring rules itself.
+
+The current frontend does not require a Node.js build system.
+
+For production deployment, authentication-token storage, HTTPS, deployment configuration, and other browser-security controls should be hardened according to the selected deployment architecture.
+
+---
+
+# Technology Stack
+
+| Layer              | Technology                    |
+| ------------------ | ----------------------------- |
+| Language           | Python                        |
+| API framework      | FastAPI                       |
+| ORM                | SQLAlchemy                    |
+| Database           | SQLite                        |
+| Authentication     | JWT                           |
+| Password hashing   | Argon2 through `pwdlib`       |
+| Frontend           | HTML, CSS, Vanilla JavaScript |
+| Environmental data | Open-Meteo                    |
+| Application server | Uvicorn                       |
+| Testing            | pytest                        |
+
+---
+
+# Repository Structure
+
+```text
+farmOS/
+├── backend/
+│   ├── app/
+│   │   ├── __init__.py
+│   │   ├── database.py
+│   │   ├── decision_engine.py
+│   │   ├── environmental_data.py
+│   │   ├── main.py
+│   │   ├── models.py
+│   │   └── security.py
+│   ├── requirements-dev.txt
+│   └── requirements.txt
+│
+├── frontend/
+│   ├── index.html
+│   ├── style.css
+│   └── app.js
+│
+├── docs/
+│   ├── architecture.md
+│   ├── decision-engine.md
+│   ├── problem.md
+│   ├── requirements.md
+│   ├── privacy-policy.md
+│   └── terms-and-conditions.md
+│
+├── tests/
+│   ├── test_api.py
+│   ├── test_current_user.py
+│   ├── test_database.py
+│   ├── test_decision_engine.py
+│   ├── test_environmental_data.py
+│   ├── test_farms.py
+│   ├── test_login.py
+│   ├── test_registration.py
+│   └── test_security.py
+│
+├── .gitignore
+├── pyproject.toml
+└── README.md
+```
+
+---
+
+# Running FarmOS Locally
+
+## 1. Clone the repository
 
 ```bash
 git clone <repository-url>
 cd farmOS
 ```
 
-### 2. Create a virtual environment
+## 2. Create a virtual environment
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 ```
 
-### 3. Install backend dependencies
+## 3. Install development dependencies
+
+For the complete development and test environment:
 
 ```bash
-pip install -r backend/requirements.txt
+pip install -r backend/requirements-dev.txt
 ```
 
-### 4. Configure the JWT secret
+The development requirements include the runtime dependencies as well as the packages required to execute the automated test suite.
+
+## 4. Configure the JWT secret
 
 Linux/macOS:
 
@@ -422,9 +658,9 @@ Linux/macOS:
 export FARMOS_JWT_SECRET="replace-with-a-strong-development-secret"
 ```
 
-Do not commit production secrets to the repository.
+Do not commit secrets to the repository.
 
-### 5. Start the API
+## 5. Start the API
 
 ```bash
 uvicorn backend.app.main:app --reload
@@ -436,15 +672,15 @@ The API will be available at:
 http://127.0.0.1:8000
 ```
 
-FastAPI's interactive API documentation is available at:
+Interactive API documentation:
 
 ```text
 http://127.0.0.1:8000/docs
 ```
 
-### 6. Start the frontend
+## 6. Start the frontend
 
-Serve the `frontend/` directory using a local HTTP server, for example:
+Open another terminal from the project root:
 
 ```bash
 python3 -m http.server 5500 --directory frontend
@@ -458,80 +694,69 @@ http://127.0.0.1:5500
 
 ---
 
-## Testing
+# Testing
 
-Run the automated test suite from the project root:
+FarmOS uses pytest for automated testing.
+
+Run the complete suite from the project root:
 
 ```bash
-pytest
+pytest -q
 ```
 
-The tests are designed to verify both isolated components and API-level behavior.
-
-Important test areas include:
+The test suite covers areas including:
 
 ```text
 Decision rules
       ↓
+Boundary conditions
+      ↓
 Input validation
       ↓
-Environmental-data failures
+Environmental-data handling
       ↓
 Authentication
       ↓
 Authorization
       ↓
-Database behavior
+User/farm ownership
+      ↓
+Database persistence
+      ↓
+Risk-assessment persistence
+      ↓
+Feedback persistence
       ↓
 API integration
 ```
 
-A clean test run is an important part of the FarmOS development and release process.
+The current verified test suite contains **76 passing tests**.
 
----
-
-## Design Principles
-
-FarmOS is built around six principles:
-
-### 1. Correctness
-
-The system should produce predictable results from defined inputs.
-
-### 2. Explainability
-
-Users should understand why an assessment was produced.
-
-### 3. Simplicity
-
-The MVP deliberately solves one agricultural decision problem rather than attempting to solve all farming problems simultaneously.
-
-### 4. Testability
-
-Core logic is separated from framework-specific code so it can be tested independently.
-
-### 5. Security
-
-Authentication, password protection, input validation, and user/farm ownership are considered part of the architecture.
-
-### 6. Extensibility
-
-The architecture is designed to support future crops, risk models, environmental data sources, sensors, satellite observations, and AI-assisted components.
-
----
-
-## Current Scope and Limitations
-
-FarmOS is an MVP and intentionally has a limited scope.
-
-Current decision-support coverage focuses on:
+Expected clean result:
 
 ```text
-Crop: Maize
-Risk: Water stress
+76 passed
 ```
 
-The current frontend supports maize and four growth stages:
+The development dependency configuration also pins the testing dependencies required for reproducible execution.
+
+---
+
+# Current Scope and Limitations
+
+FarmOS is intentionally an MVP.
+
+Current agricultural scope:
+
+```text
+Crop:
+Maize
+
+Risk:
+Water stress
+```
+
+Supported growth stages:
 
 ```text
 Germination
@@ -540,27 +765,91 @@ Flowering
 Maturity
 ```
 
-The deterministic model is a decision-support mechanism, **not a guarantee of future agricultural outcomes**.
+The current deterministic model does not directly model:
 
-Weather information is inherently uncertain, and FarmOS should therefore be interpreted as an aid to decision-making rather than a replacement for farmer judgment or professional agricultural advice.
+* Soil moisture
+* Soil type
+* Evapotranspiration
+* Irrigation infrastructure
+* Crop varieties
+* Pests
+* Diseases
+* Flooding
+* Full drought classification
+* Long-term climate projections
+* Satellite-derived crop conditions
+* Large-scale local agricultural expert knowledge
+
+Environmental information is also subject to uncertainty.
+
+Therefore:
+
+> **FarmOS is a decision-support tool, not a guarantee of agricultural outcomes.**
+
+Recommendations should be considered alongside farmer knowledge, local conditions, and appropriate agricultural guidance.
 
 ---
 
-## Roadmap
+# Responsible Use
 
-The architecture allows FarmOS to expand toward:
+FarmOS is designed to **support rather than replace farmer judgment**.
 
-### Agricultural expansion
+The current model is a deterministic MVP decision-support mechanism. It should be evaluated against appropriate agricultural datasets, field observations, and domain expertise before being relied upon for high-stakes agricultural decisions.
+
+The system should not present its output as certainty.
+
+---
+
+# Privacy and Data Protection
+
+FarmOS is designed around user-owned farm data.
+
+The application can process information including:
+
+* Account email
+* Farm information
+* Farm location
+* Risk assessments
+* Farmer feedback
+
+Access to farm and assessment information is protected through authenticated ownership checks in the backend.
+
+Detailed information about data handling is provided in:
+
+`docs/privacy-policy.md`
+
+The privacy documentation distinguishes current application behavior from potential future product capabilities.
+
+---
+
+# Terms and Conditions
+
+The project's terms governing acceptable use, agricultural decision-support limitations, user responsibilities, intellectual property, third-party services, and other conditions are available in:
+
+`docs/terms-and-conditions.md`
+
+---
+
+# Future Roadmap
+
+The current MVP provides a foundation for broader agricultural decision support.
+
+## Agricultural Intelligence
+
+Potential future capabilities include:
 
 * Additional crops
 * Additional growth-stage models
-* Drought risk
-* Heat stress
-* Flood risk
-* Excess-rainfall risk
+* Drought-risk assessment
+* Heat-stress assessment
+* Flood-risk assessment
+* Excess-rainfall assessment
 * Planting-condition assessment
+* More localized agricultural recommendations
 
-### Data expansion
+## Environmental Data
+
+Potential future sources include:
 
 * Historical climate data
 * Seasonal climate signals
@@ -569,81 +858,123 @@ The architecture allows FarmOS to expand toward:
 * Satellite observations
 * Additional weather providers
 
-### Intelligence expansion
+## Decision Intelligence
 
-* More sophisticated agricultural models
+Potential future approaches include:
+
 * Statistical forecasting
+* More sophisticated agricultural models
 * Machine-learning models
 * AI-assisted interpretation
 
-AI should augment the decision-support architecture rather than become an unexplained replacement for it.
+Any future AI component should remain explainable and should augment rather than obscure the decision-support process.
 
-### Product expansion
+## Product Experience
 
-* Assessment history
-* Farmer feedback
+Potential improvements include:
+
+* Richer assessment-history views
 * Improved dashboards
 * Notifications
 * Mobile interfaces
-* Multi-farm management
-* More localized agricultural recommendations
+* Offline-first capabilities
+* Broader farmer feedback workflows
+
+These are future extensions and are **not represented as current MVP capabilities**.
 
 ---
 
-## Documentation
+# Documentation
 
-Detailed project documentation is available in:
+The project documentation is organized as follows:
 
-* `docs/problem.md` — problem definition and project goal
-* `docs/requirements.md` — functional and architectural requirements
-* `docs/architecture.md` — system architecture and data flow
-* `docs/decision-engine.md` — decision-engine design and explainability principles
-
----
-
-## Hackathon Focus
-
-FarmOS is designed to demonstrate a practical principle:
-
-> **Environmental data becomes more valuable when it can be translated into understandable decisions.**
-
-Rather than building another weather dashboard, FarmOS focuses on the decision layer between raw environmental information and action.
-
-The MVP demonstrates this principle through a focused, explainable water-risk workflow for maize farmers.
+| Document                       | Purpose                                                                       |
+| ------------------------------ | ----------------------------------------------------------------------------- |
+| `docs/problem.md`              | Problem definition and project motivation                                     |
+| `docs/requirements.md`         | Functional and system requirements                                            |
+| `docs/architecture.md`         | System architecture, responsibilities, boundaries, persistence, and data flow |
+| `docs/decision-engine.md`      | Decision-engine design, scoring rules, thresholds, and explainability         |
+| `docs/privacy-policy.md`       | Privacy and data-protection policy                                            |
+| `docs/terms-and-conditions.md` | Terms governing use of FarmOS                                                 |
 
 ---
 
-## Status
+# Design Philosophy
 
-**Current stage: MVP / active development**
+FarmOS follows a modular architecture so that individual components can evolve independently.
 
-The core application includes:
+The current implementation separates:
 
-* FastAPI backend
-* SQLite persistence
-* User registration
-* JWT authentication
-* Password hashing
-* Farm ownership
+```text
+User Interface
+      ↓
+API
+      ↓
+Authentication / Authorization
+      ↓
+Data Layer
+      ↓
+Environmental Data
+      ↓
+Decision Engine
+      ↓
+Persistence
+      ↓
+Feedback
+```
+
+This separation allows future environmental providers, agricultural models, crops, and intelligence systems to be introduced without requiring the entire application to be redesigned.
+
+The decision engine remains independent from the web interface and external environmental-data provider implementation.
+
+---
+
+# Project Status
+
+FarmOS currently represents a **functional MVP** with:
+
+* Authenticated users
+* User-owned farms
+* Farm ownership isolation
 * Environmental-data integration
-* Deterministic water-risk decision engine
-* Explainable risk results
-* Vanilla JavaScript frontend
-* Automated tests
-* Technical documentation
+* Deterministic water-risk assessment
+* Growth-stage-aware assessment
+* Explainable risk factors
+* Human-readable recommendations
+* Persistent assessments
+* Farmer feedback
+* Automated backend testing
+* Static web frontend
+* Modular architecture
 
-The project is being hardened and polished toward a submission-ready release.
-
----
-
-## License
-
-Add the project's chosen license before public release.
+The project intentionally demonstrates a focused agricultural decision-support platform rather than a complete farm-management system.
 
 ---
 
-## Acknowledgements
+# Conclusion
 
-FarmOS uses environmental information provided through the Open-Meteo weather API.
+FarmOS turns environmental information and farm context into an explainable agricultural risk assessment.
 
-The project is built as an open, modular experiment in explainable agricultural decision support.
+Its central workflow is:
+
+```text
+Farm context
+      +
+Environmental conditions
+      ↓
+Risk assessment
+      ↓
+Explanation
+      ↓
+Recommendation
+      ↓
+Farmer action
+      ↓
+Observed result
+```
+
+The MVP demonstrates how environmental data, transparent decision rules, authentication, persistence, and farmer feedback can be combined into a modular decision-support system.
+
+The emphasis is not simply on producing a prediction.
+
+It is on producing a **traceable and understandable decision-support result that a farmer can evaluate and act upon.**

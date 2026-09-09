@@ -3,26 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FarmOS — Water Risk Assessment</title>
+    <title>FarmOS — Environmental Risk Intelligence</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <main class="container">
-        <header>
-            <h1>FarmOS</h1>
-            <p>Water Risk Assessment</p>
-        </header>
+<main class="container">
+
+    <header>
+        <h1>FarmOS</h1>
+        <p>Explainable environmental risk intelligence for small-scale farmers</p>
+    </header>
+
+    <section id="auth-card" class="card">
+        <h2>Account</h2>
+
+        <form id="auth-form">
+            <label for="email">Email</label>
+            <input
+                id="email"
+                type="email"
+                autocomplete="email"
+                required
+            >
+
+            <label for="password">Password</label>
+            <input
+                id="password"
+                type="password"
+                minlength="8"
+                maxlength="128"
+                autocomplete="current-password"
+                required
+            >
+
+            <div class="button-row">
+                <button type="submit" id="login-button">
+                    Log In
+                </button>
+                <button type="button" id="register-button" class="secondary">
+                    Register
+                </button>
+            </div>
+        </form>
+    </section>
+
+    <section id="app-card" class="hidden">
 
         <section class="card">
-            <h2>Farm Information</h2>
+            <div class="section-header">
+                <div>
+                    <h2>Your Farms</h2>
+                    <p id="user-email" class="muted"></p>
+                </div>
+                <button type="button" id="logout-button" class="secondary">
+                    Log Out
+                </button>
+            </div>
 
-            <form id="risk-form">
+            <label for="farm-select">Select Farm</label>
+            <select id="farm-select">
+                <option value="">Select a farm</option>
+            </select>
 
-                <label for="latitude">
-                    Latitude
-                </label>
+            <h3>Add Farm</h3>
 
+            <form id="farm-form">
+
+                <label for="farm-name">Farm Name</label>
+                <input
+                    id="farm-name"
+                    type="text"
+                    maxlength="255"
+                    required
+                >
+
+                <label for="latitude">Latitude</label>
                 <input
                     id="latitude"
                     type="number"
@@ -33,10 +89,7 @@
                     required
                 >
 
-                <label for="longitude">
-                    Longitude
-                </label>
-
+                <label for="longitude">Longitude</label>
                 <input
                     id="longitude"
                     type="number"
@@ -47,19 +100,13 @@
                     required
                 >
 
-                <label for="crop">
-                    Crop
-                </label>
-
+                <label for="crop">Crop</label>
                 <select id="crop" required>
                     <option value="">Select crop</option>
                     <option value="maize">Maize</option>
                 </select>
 
-                <label for="growth-stage">
-                    Growth Stage
-                </label>
-
+                <label for="growth-stage">Growth Stage</label>
                 <select id="growth-stage" required>
                     <option value="">Select growth stage</option>
                     <option value="germination">Germination</option>
@@ -69,10 +116,25 @@
                 </select>
 
                 <button type="submit">
-                    Assess Water Risk
+                    Add Farm
                 </button>
-
             </form>
+        </section>
+
+        <section class="card">
+            <h2>Water Risk Assessment</h2>
+
+            <p id="selected-farm" class="muted">
+                Select a farm to begin.
+            </p>
+
+            <button
+                type="button"
+                id="assess-button"
+                disabled
+            >
+                Assess Water Risk
+            </button>
         </section>
 
         <section id="result" class="card result hidden">
@@ -108,9 +170,50 @@
             <p id="explanation"></p>
         </section>
 
-        <p id="error" class="error hidden"></p>
-    </main>
+        <section id="feedback-card" class="card hidden">
+            <h2>Farmer Feedback</h2>
 
-    <script src="app.js"></script>
+            <p class="muted">
+                Record what action was taken and what happened afterward.
+                This feedback is linked to the assessment.
+            </p>
+
+            <form id="feedback-form">
+
+                <label for="farmer-action">
+                    Action Taken
+                </label>
+
+                <textarea
+                    id="farmer-action"
+                    maxlength="5000"
+                    required
+                ></textarea>
+
+                <label for="observed-result">
+                    Observed Result
+                </label>
+
+                <textarea
+                    id="observed-result"
+                    maxlength="5000"
+                    required
+                ></textarea>
+
+                <button type="submit">
+                    Submit Feedback
+                </button>
+            </form>
+
+            <p id="feedback-success" class="success hidden"></p>
+        </section>
+
+    </section>
+
+    <p id="error" class="error hidden"></p>
+
+</main>
+
+<script src="app.js"></script>
 </body>
 </html>

@@ -124,6 +124,21 @@ class RiskAssessment(Base):
         nullable=False,
     )
 
+    # Feedback loop: what the farmer did in response to the
+    # recommendation and what happened as a result.
+    farmer_action: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+    )
+    observed_result: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+    )
+    feedback_submitted_at: Mapped[datetime | None] = mapped_column(
+        DateTime,
+        nullable=True,
+    )
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         default=lambda: datetime.now(UTC),
